@@ -210,7 +210,7 @@
 		},
 		"empty_line_in_statement": {
 			"allowChained": false,
-			"exclude": [],
+			"exclude": [".*"],
 			"severity": "Error"
 		},
 		"empty_statement": {
@@ -355,7 +355,7 @@
 			"style": "upper"
 		},
 		"line_break_multiple_parameters": {
-			"count": 1,
+			"count": 2,
 			"exclude": [],
 			"severity": "Error"
 		},

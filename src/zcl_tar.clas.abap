@@ -426,6 +426,8 @@ CLASS zcl_tar IMPLEMENTATION.
     FIELD-SYMBOLS <lv_y> TYPE c.
 
     ASSIGN lv_x TO <lv_y> CASTING.
+    ASSERT sy-subrc = 0.
+
     rv_result = <lv_y>.
 
   ENDMETHOD.

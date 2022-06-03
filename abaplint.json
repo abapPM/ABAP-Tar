@@ -33,7 +33,8 @@
 			"allowed": [
 				"CLAS",
 				"DEVC",
-				"INTF"
+				"INTF",
+				"PROG"
 			],
 			"exclude": [],
 			"severity": "Error"
@@ -485,7 +486,7 @@
 			"msag": "^Z",
 			"patternKind": "required",
 			"pinf": "^Z",
-			"prog": "^Z",
+			"prog": "^Z_TAR",
 			"severity": "Error",
 			"shlp": "^Z",
 			"ssfo": "^Z",

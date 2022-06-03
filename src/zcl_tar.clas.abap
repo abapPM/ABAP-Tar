@@ -19,6 +19,19 @@ CLASS zcl_tar DEFINITION
 
     CONSTANTS c_version TYPE string VALUE '1.0.0' ##NEEDED.
 
+    TYPES:
+      BEGIN OF ty_file,
+        name     TYPE string,
+        date     TYPE d,
+        time     TYPE t,
+        mode     TYPE i,
+        unixtime TYPE i,
+        size     TYPE i,
+        content  TYPE xstring,
+      END OF ty_file,
+
+      ty_files TYPE STANDARD TABLE OF ty_file WITH KEY name.
+
     "! Load TAR file
     METHODS load
       IMPORTING
@@ -39,6 +52,13 @@ CLASS zcl_tar DEFINITION
         !iv_name          TYPE string
       RETURNING
         VALUE(rv_content) TYPE xstring
+      RAISING
+        zcx_tar_error.
+
+    "! Get all files from TAR
+    METHODS get_all
+      RETURNING
+        VALUE(rt_result) TYPE ty_files
       RAISING
         zcx_tar_error.
 
@@ -84,19 +104,7 @@ CLASS zcl_tar DEFINITION
         devminor TYPE c LENGTH 8,
         prefix   TYPE c LENGTH 155,
         padding  TYPE c LENGTH 12,
-      END OF ty_header,
-
-      BEGIN OF ty_file,
-        name     TYPE string,
-        date     TYPE d,
-        time     TYPE t,
-        mode     TYPE i,
-        unixtime TYPE i,
-        size     TYPE i,
-        content  TYPE xstring,
-      END OF ty_file,
-
-      ty_files TYPE STANDARD TABLE OF ty_file WITH KEY name.
+      END OF ty_header.
 
     CONSTANTS:
       c_blocksize TYPE i VALUE 512,
@@ -236,6 +244,11 @@ CLASS zcl_tar IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_tar_error.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD get_all.
+    rt_result = mt_files.
   ENDMETHOD.
 
 
@@ -425,8 +438,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
     FIELD-SYMBOLS <lv_y> TYPE c.
 
-    ASSIGN lv_x TO <lv_y> CASTING.
-    ASSERT sy-subrc = 0.
+    ASSIGN lv_x TO <lv_y> CASTING ##SUBRC_OK.
 
     rv_result = <lv_y>.
 

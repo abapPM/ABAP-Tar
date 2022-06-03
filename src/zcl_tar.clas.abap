@@ -458,9 +458,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
   METHOD _to_unixtime.
 
-    DATA:
-      lv_timestamp TYPE timestamp,
-      lv_seconds   TYPE i.
+    DATA lv_timestamp TYPE timestamp.
 
     CONVERT DATE iv_date TIME iv_time INTO TIME STAMP lv_timestamp TIME ZONE 'UTC'.
 

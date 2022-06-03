@@ -472,7 +472,7 @@
 		},
 		"object_naming": {
 			"auth": "^Z",
-			"clas": "^ZC(L|X)\\_DIFF3",
+			"clas": "^ZC(L|X)\\_TAR",
 			"doma": "^Z",
 			"dtel": "^Z",
 			"enqu": "^EZ_",
@@ -481,7 +481,7 @@
 			"idoc": "^Z",
 			"ignoreNames": [],
 			"ignorePatterns": [],
-			"intf": "^ZIF\\_DIFF3",
+			"intf": "^ZIF\\_TAR",
 			"msag": "^Z",
 			"patternKind": "required",
 			"pinf": "^Z",

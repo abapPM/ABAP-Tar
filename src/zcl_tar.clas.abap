@@ -27,10 +27,17 @@ CLASS zcl_tar DEFINITION
         mode     TYPE i,
         unixtime TYPE i,
         size     TYPE i,
+        typeflag TYPE c LENGTH 1,
         content  TYPE xstring,
       END OF ty_file,
 
       ty_files TYPE STANDARD TABLE OF ty_file WITH KEY name.
+
+    CLASS-METHODS class_constructor.
+
+    METHODS constructor
+      IMPORTING
+        !iv_force_ustar TYPE abap_bool DEFAULT abap_false.
 
     "! Load TAR file
     METHODS load
@@ -65,11 +72,12 @@ CLASS zcl_tar DEFINITION
     "! Add filed to TAR
     METHODS add
       IMPORTING
-        !iv_name    TYPE string
-        !iv_content TYPE xsequence
-        !iv_date    TYPE d OPTIONAL
-        !iv_time    TYPE t OPTIONAL
-        !iv_mode    TYPE string OPTIONAL
+        !iv_name     TYPE string
+        !iv_content  TYPE xsequence
+        !iv_date     TYPE d OPTIONAL
+        !iv_time     TYPE t OPTIONAL
+        !iv_mode     TYPE string OPTIONAL
+        !iv_typeflag TYPE c OPTIONAL
       RAISING
         zcx_tar_error.
 
@@ -110,22 +118,36 @@ CLASS zcl_tar DEFINITION
       c_blocksize TYPE i VALUE 512,
 
       BEGIN OF c_typeflag,
-        file      TYPE ty_header-typeflag VALUE '0',
-        directory TYPE ty_header-typeflag VALUE '5',
+        file              TYPE ty_header-typeflag VALUE '0',
+        hard_link         TYPE ty_header-typeflag VALUE '1',
+        symbolic_link     TYPE ty_header-typeflag VALUE '2',
+        character_special TYPE ty_header-typeflag VALUE '3',
+        block_special     TYPE ty_header-typeflag VALUE '4',
+        directory         TYPE ty_header-typeflag VALUE '5',
+        fifo              TYPE ty_header-typeflag VALUE '6',
+        contiguous_file   TYPE ty_header-typeflag VALUE '7',
       END OF c_typeflag,
 
-      c_epoch TYPE timestamp VALUE '19700101000000'.
+      c_null          TYPE x LENGTH 1 VALUE '00',
+      c_ustar_magic   TYPE c LENGTH 5 VALUE 'ustar',
+      c_ustar_version TYPE c LENGTH 2 VALUE '00',
+      c_mode_default  TYPE string VALUE '664', " rw-rw-r--
+      c_epoch         TYPE timestamp VALUE '19700101000000'.
 
     CLASS-DATA:
+      gv_null        TYPE c LENGTH 1,
       go_convert_in  TYPE REF TO cl_abap_conv_in_ce,
       go_convert_out TYPE REF TO cl_abap_conv_out_ce.
 
     DATA:
-      mt_files TYPE ty_files.
+      mv_force_ustar TYPE abap_bool,
+      mt_files       TYPE ty_files.
 
-    METHODS _null
+    METHODS _remove_null
+      IMPORTING
+        iv_data          TYPE csequence
       RETURNING
-        VALUE(rv_result) TYPE ty_null.
+        VALUE(rv_result) TYPE string.
 
     METHODS _pad
       IMPORTING
@@ -160,7 +182,7 @@ CLASS zcl_tar DEFINITION
 
     METHODS _to_xstring
       IMPORTING
-        !ig_data         TYPE any
+        !ig_data         TYPE simple
       RETURNING
         VALUE(rv_result) TYPE xstring.
 
@@ -209,16 +231,42 @@ CLASS zcl_tar IMPLEMENTATION.
       ls_file-time = iv_time.
     ENDIF.
     IF iv_mode IS INITIAL.
-      ls_file-mode = _from_octal( '664' ).  " rw-rw-r--
+      ls_file-mode = _from_octal( c_mode_default ).
     ELSE.
       ls_file-mode = _from_octal( iv_mode ).
+    ENDIF.
+    IF iv_typeflag IS INITIAL.
+      ls_file-typeflag = c_typeflag-file.
+    ELSE.
+      ls_file-typeflag = iv_typeflag.
     ENDIF.
     ls_file-unixtime = _to_unixtime( iv_date = ls_file-date iv_time = ls_file-time ).
 
     INSERT ls_file INTO TABLE mt_files.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_tar_error.
+      RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error adding file'.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD class_constructor.
+
+    " must be length 4, or it gives a syntax error on lower versions
+    DATA lv_x TYPE x LENGTH 4 VALUE '00000000'.
+
+    FIELD-SYMBOLS <lv_y> TYPE c.
+
+    ASSIGN lv_x TO <lv_y> CASTING ##SUBRC_OK.
+
+    gv_null = <lv_y>.
+
+  ENDMETHOD.
+
+
+  METHOD constructor.
+
+    mv_force_ustar = iv_force_ustar.
 
   ENDMETHOD.
 
@@ -227,7 +275,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
     DELETE mt_files WHERE name = iv_name.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_tar_error.
+      RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error deleting file'.
     ENDIF.
 
   ENDMETHOD.
@@ -241,7 +289,7 @@ CLASS zcl_tar IMPLEMENTATION.
     IF sy-subrc = 0.
       rv_content = <ls_file>-content.
     ELSE.
-      RAISE EXCEPTION TYPE zcx_tar_error.
+      RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error getting file'.
     ENDIF.
 
   ENDMETHOD.
@@ -255,6 +303,7 @@ CLASS zcl_tar IMPLEMENTATION.
   METHOD load.
 
     DATA:
+      lv_size   TYPE i,
       ls_header TYPE ty_header,
       lv_block  TYPE xstring,
       lv_count  TYPE i,
@@ -263,17 +312,18 @@ CLASS zcl_tar IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_file> TYPE ty_file.
 
-    lv_length = xstrlen( iv_tar ).
+    lv_size = xstrlen( iv_tar ).
 
-    IF lv_length MOD c_blocksize <> 0.
-      RAISE EXCEPTION TYPE zcx_tar_error.
+    IF lv_size = 0 OR lv_size MOD c_blocksize <> 0.
+      RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error loading file (blocksize)'.
     ENDIF.
-
-    lv_count = lv_length DIV c_blocksize.
 
     CLEAR mt_files.
 
-    DO lv_count TIMES.
+    DO.
+      IF lv_offset + c_blocksize > lv_size.
+        EXIT.
+      ENDIF.
 
       " Header block
       lv_block = iv_tar+lv_offset(c_blocksize).
@@ -281,22 +331,40 @@ CLASS zcl_tar IMPLEMENTATION.
 
       ls_header = _from_xstring( lv_block ).
 
+      IF ls_header CO gv_null.
+        CONTINUE.
+      ENDIF.
+
+      IF mv_force_ustar = abap_true.
+        IF _remove_null( ls_header-magic ) <> c_ustar_magic.
+          RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error loading file (ustar)'.
+        ELSEIF _remove_null( ls_header-version ) <> c_ustar_version AND _remove_null( ls_header-version ) <> ` `.
+          RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error loading file (version)'.
+        ENDIF.
+      ENDIF.
+
       APPEND INITIAL LINE TO mt_files ASSIGNING <ls_file>.
-      <ls_file>-name     = ls_header-name.
+      " <ls_file>-name     = _remove_null( ls_header-prefix && ls_header-name )
+      <ls_file>-name     = _remove_null( ls_header-name ) ##TODO.
       <ls_file>-size     = _unpad( ls_header-size ).
       <ls_file>-mode     = _unpad( ls_header-mode ).
       <ls_file>-unixtime = _unpad( ls_header-mtime ).
+      IF ls_header-typeflag = gv_null.
+        <ls_file>-typeflag = c_typeflag-file.
+      ELSE.
+        <ls_file>-typeflag = ls_header-typeflag.
+      ENDIF.
 
       _from_unixtime(
         EXPORTING
-          iv_unixtime = _unpad( ls_header-mtime )
+          iv_unixtime = <ls_file>-unixtime
         IMPORTING
           ev_date     = <ls_file>-date
           ev_time     = <ls_file>-time ).
 
       " Data blocks
       lv_length = <ls_file>-size.
-      lv_count  = ( <ls_file>-size DIV c_blocksize ) + 1.
+      lv_count  = ( <ls_file>-size - 1 ) DIV c_blocksize + 1.
 
       DO lv_count TIMES.
         IF lv_length > c_blocksize.
@@ -336,9 +404,9 @@ CLASS zcl_tar IMPLEMENTATION.
       ls_header-size     = _pad( iv_number = <ls_file>-size iv_length = 11 ).
       ls_header-mtime    = _pad( iv_number = <ls_file>-unixtime iv_length = 11 ).
       ls_header-chksum   = `        `. " 8 spaces
-      ls_header-typeflag = c_typeflag-file.
-      ls_header-magic    = 'ustar'.
-      ls_header-version  = '00'.
+      ls_header-typeflag = <ls_file>-typeflag.
+      ls_header-magic    = c_ustar_magic.
+      ls_header-version  = c_ustar_version.
       ls_header-uname    = cl_abap_syst=>get_user_name( ).
       ls_header-chksum   = _pad( iv_number = _checksum( ls_header ) iv_length = 7 ).
 
@@ -348,7 +416,7 @@ CLASS zcl_tar IMPLEMENTATION.
       " Data blocks
       lv_offset = 0.
       lv_length = <ls_file>-size.
-      lv_count  = ( lv_length DIV c_blocksize ) + 1.
+      lv_count  = ( lv_length - 1 ) DIV c_blocksize + 1.
 
       DO lv_count TIMES.
         IF lv_length > c_blocksize.
@@ -431,23 +499,17 @@ CLASS zcl_tar IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD _null.
+  METHOD _pad.
 
-    " must be length 4, or it gives a syntax error on lower versions
-    DATA lv_x TYPE x LENGTH 4 VALUE '00000000'.
-
-    FIELD-SYMBOLS <lv_y> TYPE c.
-
-    ASSIGN lv_x TO <lv_y> CASTING ##SUBRC_OK.
-
-    rv_result = <lv_y>.
+    rv_result = |{ _to_octal( iv_number ) ALIGN = RIGHT PAD = '0' WIDTH = iv_length }|.
 
   ENDMETHOD.
 
 
-  METHOD _pad.
+  METHOD _remove_null.
 
-    rv_result = |{ _to_octal( iv_number ) ALIGN = RIGHT PAD = '0' WIDTH = iv_length }|.
+    rv_result = iv_data.
+    REPLACE ALL OCCURRENCES OF gv_null IN rv_result WITH ''.
 
   ENDMETHOD.
 
@@ -510,9 +572,8 @@ CLASS zcl_tar IMPLEMENTATION.
 
     lv_data = iv_data.
     REPLACE ALL OCCURRENCES OF ` ` IN lv_data WITH ''.
-    REPLACE ALL OCCURRENCES OF _null( ) IN lv_data WITH ''.
 
-    rv_result = _from_octal( condense( lv_data ) ).
+    rv_result = _from_octal( condense( _remove_null( lv_data ) ) ).
 
   ENDMETHOD.
 ENDCLASS.

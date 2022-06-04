@@ -10,7 +10,7 @@ REPORT z_tar_tester.
 ************************************************************************
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
-  PARAMETERS p_tar TYPE string LOWER CASE.
+  PARAMETERS p_tar TYPE string LOWER CASE OBLIGATORY.
 SELECTION-SCREEN END OF BLOCK b1.
 
 CLASS lcl_files DEFINITION.
@@ -25,6 +25,11 @@ CLASS lcl_files DEFINITION.
         !iv_path         TYPE string
       RETURNING
         VALUE(rv_result) TYPE xstring.
+
+    CLASS-METHODS download
+      IMPORTING
+        !iv_path TYPE string
+        !iv_data TYPE xstring.
 
 ENDCLASS.
 CLASS lcl_files IMPLEMENTATION.
@@ -72,8 +77,7 @@ CLASS lcl_files IMPLEMENTATION.
 
   METHOD upload.
 
-    TYPES:
-      ty_hex TYPE x LENGTH 2048.
+    TYPES ty_hex TYPE x LENGTH 2048.
 
     DATA:
       lt_data   TYPE TABLE OF ty_hex WITH DEFAULT KEY,
@@ -117,6 +121,57 @@ CLASS lcl_files IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD download.
+
+    TYPES ty_hex TYPE x LENGTH 2048.
+
+    DATA lt_data TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
+
+    zcl_abapgit_convert=>xstring_to_bintab(
+      EXPORTING
+        iv_xstr   = iv_data
+      IMPORTING
+        et_bintab = lt_data ).
+
+    cl_gui_frontend_services=>gui_download(
+      EXPORTING
+        bin_filesize              = xstrlen( iv_data )
+        filename                  = iv_path
+        filetype                  = 'BIN'
+      CHANGING
+        data_tab                  = lt_data
+      EXCEPTIONS
+        file_write_error          = 1
+        no_batch                  = 2
+        gui_refuse_filetransfer   = 3
+        invalid_type              = 4
+        no_authority              = 5
+        unknown_error             = 6
+        header_not_allowed        = 7
+        separator_not_allowed     = 8
+        filesize_not_allowed      = 9
+        header_too_long           = 10
+        dp_error_create           = 11
+        dp_error_send             = 12
+        dp_error_write            = 13
+        unknown_dp_error          = 14
+        access_denied             = 15
+        dp_out_of_memory          = 16
+        disk_full                 = 17
+        dp_timeout                = 18
+        file_not_found            = 19
+        dataprovider_exception    = 20
+        control_flush_error       = 21
+        not_supported_by_gui      = 22
+        error_no_gui              = 23
+        OTHERS                    = 24 ).
+    IF sy-subrc <> 0.
+      MESSAGE 'File save error' TYPE 'I' DISPLAY LIKE 'E'.
+      RETURN.
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_tar.
@@ -126,16 +181,53 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_tar.
 START-OF-SELECTION.
 
   DATA:
-    lv_data  TYPE xstring,
-    lo_tar   TYPE REF TO zcl_tar,
-    lt_files TYPE zcl_tar=>ty_files.
+    lv_data    TYPE xstring,
+    lo_tar_in  TYPE REF TO zcl_tar,
+    lo_tar_out TYPE REF TO zcl_tar,
+    lt_files   TYPE zcl_tar=>ty_files,
+    ls_file    TYPE zcl_tar=>ty_file.
 
+  " Load Test
   lv_data = lcl_files=>upload( p_tar ).
 
-  CREATE OBJECT lo_tar.
+  TRY.
+      CREATE OBJECT lo_tar_in.
 
-  lo_tar->load( lv_data ).
+      lo_tar_in->load( lv_data ).
 
-  lt_files = lo_tar->get_all( ).
+      lt_files = lo_tar_in->get_all( ).
+
+    CATCH zcx_tar_error.
+      MESSAGE ID sy-msgid TYPE 'I' NUMBER sy-msgno
+        WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 DISPLAY LIKE sy-msgty.
+      RETURN.
+  ENDTRY.
 
   BREAK-POINT.
+
+  " Save Test
+  TRY.
+
+      CREATE OBJECT lo_tar_out.
+
+      LOOP AT lt_files INTO ls_file.
+        lo_tar_out->add(
+          iv_name     = ls_file-name
+          iv_content  = ls_file-content
+          iv_date     = ls_file-date
+          iv_time     = ls_file-time
+          iv_mode     = '664'
+          iv_typeflag = ls_file-typeflag ).
+      ENDLOOP.
+
+      lv_data = lo_tar_out->save( ).
+
+    CATCH zcx_tar_error.
+      MESSAGE ID sy-msgid TYPE 'I' NUMBER sy-msgno
+        WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 DISPLAY LIKE sy-msgty.
+      RETURN.
+  ENDTRY.
+
+  lcl_files=>download(
+    iv_path = p_tar && '_new.tar'
+    iv_data = lv_data ).

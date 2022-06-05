@@ -7,12 +7,12 @@ CLASS ltcl_tar_tests DEFINITION FOR TESTING RISK LEVEL HARMLESS
     METHODS:
       setup,
       null FOR TESTING,
-      filename FOR TESTING,
-      checksum FOR TESTING,
+      filename FOR TESTING RAISING zcx_tar_error,
+      checksum FOR TESTING RAISING zcx_tar_error,
       octal FOR TESTING,
       pad FOR TESTING,
       unixtime FOR TESTING,
-      xstring FOR TESTING.
+      xstring FOR TESTING RAISING zcx_tar_error.
 
 ENDCLASS.
 
@@ -27,31 +27,42 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
   METHOD null.
 
     DATA:
+      lv_null TYPE c LENGTH 1,
       BEGIN OF ls_data,
         name TYPE c LENGTH 10,
         size TYPE c LENGTH 5,
         mode TYPE c LENGTH 8,
       END OF ls_data.
 
+    lv_null = mo_cut->gv_null(1).
+
     ls_data-name = 'test.txt'.
-    ls_data-size = '123'.
+    ls_data-size = '12345'.
     ls_data-mode = '01234'.
 
     mo_cut->_append_nulls( CHANGING cg_data = ls_data ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_data-name
-      exp = 'test.txt' && mo_cut->gv_null && mo_cut->gv_null ).
+      exp = 'test.txt' && lv_null && lv_null ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_data-size
+      exp = '12345' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_data-mode
-      exp = '01234' && mo_cut->gv_null && mo_cut->gv_null && mo_cut->gv_null ).
+      exp = '01234' && lv_null && lv_null && lv_null ).
 
     mo_cut->_remove_nulls( CHANGING cg_data = ls_data ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_data-name
       exp = 'test.txt' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_data-size
+      exp = '12345' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_data-mode

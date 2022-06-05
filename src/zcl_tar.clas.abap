@@ -142,7 +142,7 @@ CLASS zcl_tar DEFINITION
       c_epoch         TYPE timestamp VALUE '19700101000000'.
 
     CLASS-DATA:
-      gv_null        TYPE c LENGTH 1,
+      gv_null        TYPE c LENGTH 256,
       go_convert_in  TYPE REF TO cl_abap_conv_in_ce,
       go_convert_out TYPE REF TO cl_abap_conv_out_ce.
 
@@ -188,20 +188,26 @@ CLASS zcl_tar DEFINITION
       IMPORTING
         !iv_data         TYPE xstring
       RETURNING
-        VALUE(rv_result) TYPE string.
+        VALUE(rv_result) TYPE string
+      RAISING
+        zcx_tar_error.
 
     METHODS _to_xstring
       IMPORTING
         !ig_data         TYPE simple
       RETURNING
-        VALUE(rv_result) TYPE xstring.
+        VALUE(rv_result) TYPE xstring
+      RAISING
+        zcx_tar_error.
 
     METHODS _from_filename
       IMPORTING
         !iv_filename TYPE string
       EXPORTING
         !ev_prefix   TYPE ty_header-prefix
-        !ev_name     TYPE ty_header-name.
+        !ev_name     TYPE ty_header-name
+      RAISING
+        zcx_tar_error.
 
     METHODS _to_filename
       IMPORTING
@@ -228,7 +234,9 @@ CLASS zcl_tar DEFINITION
       IMPORTING
         VALUE(ig_data)   TYPE any
       RETURNING
-        VALUE(rv_result) TYPE i.
+        VALUE(rv_result) TYPE i
+      RAISING
+        zcx_tar_error.
 
 ENDCLASS.
 
@@ -270,7 +278,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
     INSERT ls_file INTO TABLE mt_files.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error adding file (list)'.
+      zcx_tar_error=>raise( 'Error adding file (list)' ).
     ENDIF.
 
     " Data
@@ -278,7 +286,7 @@ CLASS zcl_tar IMPLEMENTATION.
     ls_data-content = iv_content.
     INSERT ls_data INTO TABLE mt_data.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error adding file (data)'.
+      zcx_tar_error=>raise( 'Error adding file (data)' ).
     ENDIF.
 
   ENDMETHOD.
@@ -286,7 +294,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
   METHOD class_constructor.
 
-    " must be length 4, or it gives a syntax error on lower versions
+    " Generate a char 256 null
     DATA lv_x TYPE x LENGTH 4 VALUE '00000000'.
 
     FIELD-SYMBOLS <lv_y> TYPE c.
@@ -295,13 +303,19 @@ CLASS zcl_tar IMPLEMENTATION.
 
     gv_null = <lv_y>.
 
+    DO 8 TIMES.
+      gv_null = gv_null && gv_null.
+    ENDDO.
+
+    " Initialize converters
+    go_convert_in  = cl_abap_conv_in_ce=>create( encoding = 'UTF-8' ).
+    go_convert_out = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
+
   ENDMETHOD.
 
 
   METHOD constructor.
-
     mv_force_ustar = iv_force_ustar.
-
   ENDMETHOD.
 
 
@@ -309,12 +323,12 @@ CLASS zcl_tar IMPLEMENTATION.
 
     DELETE mt_files WHERE name = iv_name.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error deleting file (list)'.
+      zcx_tar_error=>raise( 'Error deleting file (list)' ).
     ENDIF.
 
     DELETE mt_data WHERE name = iv_name.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error deleting file (data)'.
+      zcx_tar_error=>raise( 'Error deleting file (data)' ).
     ENDIF.
 
   ENDMETHOD.
@@ -328,7 +342,7 @@ CLASS zcl_tar IMPLEMENTATION.
     IF sy-subrc = 0.
       rv_content = <ls_data>-content.
     ELSE.
-      RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error getting file'.
+      zcx_tar_error=>raise( 'Error getting file' ).
     ENDIF.
 
   ENDMETHOD.
@@ -354,7 +368,7 @@ CLASS zcl_tar IMPLEMENTATION.
     lv_size = xstrlen( iv_tar ).
 
     IF lv_size = 0 OR lv_size MOD c_blocksize <> 0.
-      RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error loading file (blocksize)'.
+      zcx_tar_error=>raise( 'Error loading file (blocksize)' ).
     ENDIF.
 
     CLEAR mt_files.
@@ -378,9 +392,9 @@ CLASS zcl_tar IMPLEMENTATION.
 
       IF mv_force_ustar = abap_true.
         IF ls_header-magic <> c_ustar_magic.
-          RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error loading file (ustar)'.
+          zcx_tar_error=>raise( 'Error loading file (ustar)' ).
         ELSEIF ls_header-version <> c_ustar_version AND ls_header-version <> ` `.
-          RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error loading file (version)'.
+          zcx_tar_error=>raise( 'Error loading file (version)' ).
         ENDIF.
       ENDIF.
 
@@ -424,7 +438,6 @@ CLASS zcl_tar IMPLEMENTATION.
       ENDDO.
 
       INSERT ls_data INTO TABLE mt_data.
-
     ENDDO.
 
   ENDMETHOD.
@@ -448,9 +461,9 @@ CLASS zcl_tar IMPLEMENTATION.
       WHERE typeflag = c_typeflag-file OR typeflag = c_typeflag-directory.
 
       IF strlen( <ls_file>-name ) > 255.
-        RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error saving file (name)'.
+        zcx_tar_error=>raise( 'Error saving file (name)' ).
       ELSEIF <ls_file>-name CA '\'.
-        RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error saving file (path)'.
+        zcx_tar_error=>raise( 'Error saving file (path)' ).
       ENDIF.
 
       " Header block
@@ -489,7 +502,7 @@ CLASS zcl_tar IMPLEMENTATION.
       " Data blocks
       READ TABLE mt_data ASSIGNING <ls_data> WITH TABLE KEY name = <ls_file>-name.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE zcx_tar_error MESSAGE e002(sy) WITH 'Error saving file (data)'.
+        zcx_tar_error=>raise( 'Error saving file (data)' ).
       ENDIF.
 
       lv_offset = 0.
@@ -514,9 +527,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
   METHOD _append_nulls.
 
-    DATA:
-      lv_count  TYPE i,
-      lv_length TYPE i.
+    DATA lv_count TYPE i.
 
     FIELD-SYMBOLS <lv_field> TYPE any.
 
@@ -526,12 +537,7 @@ CLASS zcl_tar IMPLEMENTATION.
       IF sy-subrc <> 0.
         EXIT.
       ENDIF.
-
-      DESCRIBE FIELD <lv_field> LENGTH lv_length IN BYTE MODE.
-
-      DO lv_length TIMES.
-        <lv_field> = <lv_field> && gv_null.
-      ENDDO.
+      <lv_field> = <lv_field> && gv_null.
     ENDDO.
 
   ENDMETHOD.
@@ -568,9 +574,10 @@ CLASS zcl_tar IMPLEMENTATION.
         EXIT.
       ENDIF.
 
+      " Shorten name by moving part of path to prefix
       SPLIT lv_name AT c_path_sep INTO lv_prefix lv_name.
       IF sy-subrc <> 0.
-        EXIT.
+        zcx_tar_error=>raise( 'Error file name too long' ).
       ENDIF.
 
       IF ev_prefix IS INITIAL.
@@ -599,9 +606,15 @@ CLASS zcl_tar IMPLEMENTATION.
 
     DATA lv_timestamp TYPE timestampl.
 
-    lv_timestamp = cl_abap_tstmp=>add(
-      tstmp = c_epoch
-      secs  = iv_unixtime ).
+    TRY.
+        lv_timestamp = cl_abap_tstmp=>add(
+          tstmp = c_epoch
+          secs  = iv_unixtime ).
+
+      CATCH cx_parameter_invalid_range
+            cx_parameter_invalid_type.
+        zcx_tar_error=>raise( 'Error converting from UNIX time' ).
+    ENDTRY.
 
     CONVERT TIME STAMP lv_timestamp TIME ZONE 'UTC' INTO DATE ev_date TIME ev_time.
 
@@ -611,10 +624,6 @@ CLASS zcl_tar IMPLEMENTATION.
   METHOD _from_xstring.
 
     TRY.
-        IF go_convert_in IS INITIAL.
-          go_convert_in = cl_abap_conv_in_ce=>create( encoding = 'UTF-8' ).
-        ENDIF.
-
         go_convert_in->convert(
           EXPORTING
             input = iv_data
@@ -624,7 +633,8 @@ CLASS zcl_tar IMPLEMENTATION.
 
       CATCH cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
-            cx_parameter_invalid_type ##NO_HANDLER.
+            cx_parameter_invalid_type.
+        zcx_tar_error=>raise( 'Error converting from xstring' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -649,7 +659,7 @@ CLASS zcl_tar IMPLEMENTATION.
       IF sy-subrc <> 0.
         EXIT.
       ENDIF.
-      REPLACE ALL OCCURRENCES OF gv_null IN <lv_field> WITH ''.
+      REPLACE ALL OCCURRENCES OF gv_null(1) IN <lv_field> WITH ''.
     ENDDO.
 
   ENDMETHOD.
@@ -690,9 +700,15 @@ CLASS zcl_tar IMPLEMENTATION.
 
     CONVERT DATE iv_date TIME iv_time INTO TIME STAMP lv_timestamp TIME ZONE 'UTC'.
 
-    rv_result = cl_abap_tstmp=>subtract(
-      tstmp1 = lv_timestamp
-      tstmp2 = c_epoch ).
+    TRY.
+        rv_result = cl_abap_tstmp=>subtract(
+          tstmp1 = lv_timestamp
+          tstmp2 = c_epoch ).
+
+      CATCH cx_parameter_invalid_range
+            cx_parameter_invalid_type.
+        zcx_tar_error=>raise( 'Error converting to UNIX time' ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -704,10 +720,6 @@ CLASS zcl_tar IMPLEMENTATION.
     lv_data = ig_data.
 
     TRY.
-        IF go_convert_out IS INITIAL.
-          go_convert_out = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
-        ENDIF.
-
         go_convert_out->convert(
           EXPORTING
             data   = lv_data
@@ -716,7 +728,8 @@ CLASS zcl_tar IMPLEMENTATION.
 
       CATCH cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
-            cx_parameter_invalid_type ##NO_HANDLER.
+            cx_parameter_invalid_type.
+        zcx_tar_error=>raise( 'Error converting to xstring' ).
     ENDTRY.
 
   ENDMETHOD.

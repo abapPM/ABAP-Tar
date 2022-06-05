@@ -94,9 +94,6 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
   PRIVATE SECTION.
 
     TYPES:
-      ty_null TYPE c LENGTH 1.
-
-    TYPES:
       BEGIN OF ty_header,
         name     TYPE c LENGTH 100,
         mode     TYPE c LENGTH 8,
@@ -138,7 +135,6 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
         contiguous_file   TYPE ty_header-typeflag VALUE '7',
       END OF c_typeflag,
 
-      c_null          TYPE x LENGTH 1 VALUE '00',
       c_ustar_magic   TYPE c LENGTH 5 VALUE 'ustar',
       c_ustar_version TYPE c LENGTH 2 VALUE '00',
       c_mode_default  TYPE i VALUE 436, " octal 664 rw-rw-r--
@@ -245,7 +241,6 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
         VALUE(rv_result) TYPE i
       RAISING
         zcx_tar_error.
-
 ENDCLASS.
 
 

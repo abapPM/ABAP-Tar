@@ -6,6 +6,8 @@ CLASS ltcl_tar_tests DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
     METHODS:
       setup,
+      null FOR TESTING,
+      filename FOR TESTING,
       checksum FOR TESTING,
       octal FOR TESTING,
       pad FOR TESTING,
@@ -22,12 +24,95 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
     CREATE OBJECT mo_cut.
   ENDMETHOD.
 
-  METHOD checksum.
+  METHOD null.
 
-    CONSTANTS lc_xdata TYPE xstring VALUE '61626320313233'.
+    DATA:
+      BEGIN OF ls_data,
+        name TYPE c LENGTH 10,
+        size TYPE c LENGTH 5,
+        mode TYPE c LENGTH 8,
+      END OF ls_data.
+
+    ls_data-name = 'test.txt'.
+    ls_data-size = '123'.
+    ls_data-mode = '01234'.
+
+    mo_cut->_append_nulls( CHANGING cg_data = ls_data ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_checksum( lc_xdata )
+      act = ls_data-name
+      exp = 'test.txt' && mo_cut->gv_null && mo_cut->gv_null ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_data-mode
+      exp = '01234' && mo_cut->gv_null && mo_cut->gv_null && mo_cut->gv_null ).
+
+    mo_cut->_remove_nulls( CHANGING cg_data = ls_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_data-name
+      exp = 'test.txt' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_data-mode
+      exp = '01234' ).
+
+  ENDMETHOD.
+
+  METHOD filename.
+
+    DATA:
+      lv_filename TYPE string,
+      lv_prefix   TYPE zcl_tar=>ty_header-prefix,
+      lv_name     TYPE zcl_tar=>ty_header-name.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->_to_filename( iv_prefix = 'package/modules' iv_name = 'tar.sh' )
+      exp = 'package/modules/tar.sh' ).
+
+    " Short filename
+    mo_cut->_from_filename(
+      EXPORTING
+        iv_filename = 'package/modules/tar.sh'
+      IMPORTING
+        ev_prefix   = lv_prefix
+        ev_name     = lv_name ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_prefix
+      exp = '' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_name
+      exp = 'package/modules/tar.sh' ).
+
+    " Long filename
+    lv_filename = 'package/node_modules/node-gyp/node_modules/path-array/' &&
+      'node_modules/array-index/node_modules/es6-symbol/case-insensitive-compare.js'.
+
+    mo_cut->_from_filename(
+      EXPORTING
+        iv_filename = lv_filename
+      IMPORTING
+        ev_prefix   = lv_prefix
+        ev_name     = lv_name ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_prefix
+      exp = 'package/node_modules/node-gyp' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_prefix && '/' && lv_name
+      exp = lv_filename ).
+
+  ENDMETHOD.
+
+  METHOD checksum.
+
+    CONSTANTS lc_data TYPE string VALUE 'abc 123'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_cut->_checksum( lc_data )
       exp = 476 ).
 
   ENDMETHOD.
@@ -134,12 +219,12 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
   METHOD xstring.
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_to_xstring( 'abc 123' )
-      exp = '61626320313233' ).
+      act = mo_cut->_to_xstring( 'abc 123 -' )
+      exp = '61626320313233202D' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_from_xstring( '61626320313233' )
-      exp = 'abc 123' ).
+      act = mo_cut->_from_xstring( '61626320313233202D' )
+      exp = 'abc 123 -' ).
 
   ENDMETHOD.
 

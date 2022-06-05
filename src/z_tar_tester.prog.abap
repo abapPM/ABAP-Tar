@@ -184,6 +184,7 @@ START-OF-SELECTION.
     lv_data    TYPE xstring,
     lo_tar_in  TYPE REF TO zcl_tar,
     lo_tar_out TYPE REF TO zcl_tar,
+    lx_error   TYPE REF TO zcx_tar_error,
     lt_files   TYPE zcl_tar=>ty_files,
     ls_file    TYPE zcl_tar=>ty_file.
 
@@ -195,15 +196,12 @@ START-OF-SELECTION.
 
       lo_tar_in->load( lv_data ).
 
-      lt_files = lo_tar_in->get_all( ).
+      lt_files = lo_tar_in->list( ).
 
-    CATCH zcx_tar_error.
-      MESSAGE ID sy-msgid TYPE 'I' NUMBER sy-msgno
-        WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 DISPLAY LIKE sy-msgty.
+    CATCH zcx_tar_error INTO lx_error.
+      MESSAGE |{ lx_error->get_text( ) }| TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
   ENDTRY.
-
-  BREAK-POINT.
 
   " Save Test
   TRY.
@@ -213,18 +211,17 @@ START-OF-SELECTION.
       LOOP AT lt_files INTO ls_file.
         lo_tar_out->add(
           iv_name     = ls_file-name
-          iv_content  = ls_file-content
+          iv_content  = lo_tar_in->get( ls_file-name )
           iv_date     = ls_file-date
           iv_time     = ls_file-time
-          iv_mode     = '664'
+          iv_mode     = ls_file-mode
           iv_typeflag = ls_file-typeflag ).
       ENDLOOP.
 
       lv_data = lo_tar_out->save( ).
 
-    CATCH zcx_tar_error.
-      MESSAGE ID sy-msgid TYPE 'I' NUMBER sy-msgno
-        WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 DISPLAY LIKE sy-msgty.
+    CATCH zcx_tar_error INTO lx_error.
+      MESSAGE |{ lx_error->get_text( ) }| TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
   ENDTRY.
 

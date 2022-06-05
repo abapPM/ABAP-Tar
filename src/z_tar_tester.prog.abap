@@ -234,5 +234,5 @@ START-OF-SELECTION.
 
   " Download archive
   lcl_files=>download(
-    iv_path = p_tar && '_new.tar'
+    iv_path = p_tar && '.copy.tar'
     iv_data = lv_data ).

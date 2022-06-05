@@ -32,14 +32,12 @@ CLASS ltcl_base DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT ABSTRA
 
     METHODS:
       given_the_text IMPORTING iv_text TYPE csequence,
-      given_the_longtext IMPORTING iv_longtext TYPE csequence,
       given_the_t100_message IMPORTING is_message TYPE symsg,
       given_the_previous_exception IMPORTING ix_previous_exception TYPE REF TO cx_root,
       when_instantiated_using_raise,
       when_instan_using_raise_t100,
       when_inst_usng_raise_with_text,
       then_the_text_should_equal IMPORTING iv_text TYPE csequence,
-      then_the_longtext_should_equal IMPORTING iv_longtext TYPE csequence,
       then_the_prev_exc_should_equal IMPORTING ix_exception TYPE REF TO cx_root.
 
   PRIVATE SECTION.
@@ -62,10 +60,6 @@ CLASS ltcl_base IMPLEMENTATION.
 
   METHOD given_the_text.
     ms_given-text = iv_text.
-  ENDMETHOD.
-
-  METHOD given_the_longtext.
-    ms_given-longtext = iv_longtext.
   ENDMETHOD.
 
   METHOD given_the_t100_message.
@@ -108,7 +102,7 @@ CLASS ltcl_base IMPLEMENTATION.
   METHOD when_inst_usng_raise_with_text.
 
     TRY.
-        zcx_tar_error=>raise_with_text( ix_previous = ms_given-previous_exception ).
+        zcx_tar_error=>raise_with_text( ms_given-previous_exception ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_tar_error INTO mo_cut ##NEEDED.
     ENDTRY.
@@ -119,12 +113,6 @@ CLASS ltcl_base IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = iv_text
       act = mo_cut->get_text( ) ).
-  ENDMETHOD.
-
-  METHOD then_the_longtext_should_equal.
-    cl_abap_unit_assert=>assert_equals(
-      exp = iv_longtext
-      act = mo_cut->get_longtext( abap_true ) ).
   ENDMETHOD.
 
   METHOD then_the_prev_exc_should_equal.

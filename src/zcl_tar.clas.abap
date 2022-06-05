@@ -1,7 +1,4 @@
-CLASS zcl_tar DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PUBLIC.
+CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
 
 ************************************************************************
 * ABAP Tar
@@ -33,25 +30,32 @@ CLASS zcl_tar DEFINITION
 
     CLASS-METHODS class_constructor.
 
+    "! Create archive
+    CLASS-METHODS create
+      IMPORTING
+        !iv_force_ustar TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ro_tar)   TYPE REF TO zcl_tar.
+
     METHODS constructor
       IMPORTING
-        !iv_force_ustar TYPE abap_bool DEFAULT abap_false.
+        !iv_force_ustar TYPE abap_bool.
 
-    "! Load TAR file
+    "! Load archive
     METHODS load
       IMPORTING
         !iv_tar TYPE xstring
       RAISING
         zcx_tar_error.
 
-    "! Create TAR file
+    "! Create archive
     METHODS save
       RETURNING
         VALUE(rv_tar) TYPE xstring
       RAISING
         zcx_tar_error.
 
-    "! Read file from TAR
+    "! Read file from archive
     METHODS get
       IMPORTING
         !iv_name          TYPE string
@@ -60,15 +64,15 @@ CLASS zcl_tar DEFINITION
       RAISING
         zcx_tar_error.
 
-    "! Get list of all files in TAR
+    "! List the contents of an archive
     METHODS list
       RETURNING
         VALUE(rt_result) TYPE ty_files
       RAISING
         zcx_tar_error.
 
-    "! Add filed to TAR
-    METHODS add
+    "! Append file to archive
+    METHODS append
       IMPORTING
         !iv_name     TYPE string
         !iv_content  TYPE xsequence
@@ -79,7 +83,7 @@ CLASS zcl_tar DEFINITION
       RAISING
         zcx_tar_error.
 
-    "! Delete file from TAR
+    "! Delete file from archive
     METHODS delete
       IMPORTING
         !iv_name TYPE string
@@ -221,14 +225,18 @@ CLASS zcl_tar DEFINITION
         !iv_unixtime TYPE i
       EXPORTING
         !ev_date     TYPE d
-        !ev_time     TYPE t.
+        !ev_time     TYPE t
+      RAISING
+        zcx_tar_error.
 
     METHODS _to_unixtime
       IMPORTING
         !iv_date         TYPE d
         !iv_time         TYPE t
       RETURNING
-        VALUE(rv_result) TYPE i.
+        VALUE(rv_result) TYPE i
+      RAISING
+        zcx_tar_error.
 
     METHODS _checksum
       IMPORTING
@@ -245,7 +253,7 @@ ENDCLASS.
 CLASS zcl_tar IMPLEMENTATION.
 
 
-  METHOD add.
+  METHOD append.
 
     DATA:
       ls_file TYPE ty_file,
@@ -316,6 +324,15 @@ CLASS zcl_tar IMPLEMENTATION.
 
   METHOD constructor.
     mv_force_ustar = iv_force_ustar.
+  ENDMETHOD.
+
+
+  METHOD create.
+
+    CREATE OBJECT ro_tar
+      EXPORTING
+        iv_force_ustar = iv_force_ustar.
+
   ENDMETHOD.
 
 

@@ -1,5 +1,4 @@
-CLASS ltcl_tar_tests DEFINITION FOR TESTING RISK LEVEL HARMLESS
-  DURATION SHORT FINAL.
+CLASS ltcl_tar_tests DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
     DATA mo_cut TYPE REF TO zcl_tar.
@@ -11,7 +10,7 @@ CLASS ltcl_tar_tests DEFINITION FOR TESTING RISK LEVEL HARMLESS
       checksum FOR TESTING RAISING zcx_tar_error,
       octal FOR TESTING,
       pad FOR TESTING,
-      unixtime FOR TESTING,
+      unixtime FOR TESTING RAISING zcx_tar_error,
       xstring FOR TESTING RAISING zcx_tar_error.
 
 ENDCLASS.
@@ -21,7 +20,7 @@ CLASS zcl_tar DEFINITION LOCAL FRIENDS ltcl_tar_tests.
 CLASS ltcl_tar_tests IMPLEMENTATION.
 
   METHOD setup.
-    CREATE OBJECT mo_cut.
+    mo_cut = zcl_tar=>create( ).
   ENDMETHOD.
 
   METHOD null.

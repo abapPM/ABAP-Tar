@@ -16,6 +16,7 @@ SELECTION-SCREEN END OF BLOCK b1.
 CLASS lcl_files DEFINITION.
 
   PUBLIC SECTION.
+
     CLASS-METHODS open_dialog
       RETURNING
         VALUE(rv_result) TYPE string.
@@ -31,7 +32,14 @@ CLASS lcl_files DEFINITION.
         !iv_path TYPE string
         !iv_data TYPE xstring.
 
+  PRIVATE SECTION.
+
+    TYPES ty_hex TYPE x LENGTH 2048.
+
+    TYPES ty_data TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
+
 ENDCLASS.
+
 CLASS lcl_files IMPLEMENTATION.
 
   METHOD open_dialog.
@@ -77,10 +85,8 @@ CLASS lcl_files IMPLEMENTATION.
 
   METHOD upload.
 
-    TYPES ty_hex TYPE x LENGTH 2048.
-
     DATA:
-      lt_data   TYPE TABLE OF ty_hex WITH DEFAULT KEY,
+      lt_data   TYPE ty_data,
       lv_length TYPE i.
 
     cl_gui_frontend_services=>gui_upload(
@@ -112,7 +118,7 @@ CLASS lcl_files IMPLEMENTATION.
         error_no_gui            = 18
         OTHERS                  = 19 ).
     IF sy-subrc <> 0.
-      MESSAGE 'File upload error' TYPE 'I' DISPLAY LIKE 'E'.
+      MESSAGE 'File load error' TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
     ENDIF.
 
@@ -123,15 +129,13 @@ CLASS lcl_files IMPLEMENTATION.
 
   METHOD download.
 
-    TYPES ty_hex TYPE x LENGTH 2048.
+    DATA lt_data TYPE ty_data.
 
-    DATA lt_data TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
-
-    zcl_abapgit_convert=>xstring_to_bintab(
+    CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
       EXPORTING
-        iv_xstr   = iv_data
-      IMPORTING
-        et_bintab = lt_data ).
+        buffer     = iv_data
+      TABLES
+        binary_tab = lt_data.
 
     cl_gui_frontend_services=>gui_download(
       EXPORTING
@@ -182,34 +186,36 @@ START-OF-SELECTION.
 
   DATA:
     lv_data    TYPE xstring,
+    lv_msg     TYPE string,
     lo_tar_in  TYPE REF TO zcl_tar,
     lo_tar_out TYPE REF TO zcl_tar,
     lx_error   TYPE REF TO zcx_tar_error,
     lt_files   TYPE zcl_tar=>ty_files,
     ls_file    TYPE zcl_tar=>ty_file.
 
-  " Load Test
+  " Upload archive
   lv_data = lcl_files=>upload( p_tar ).
 
+  " Load Test
   TRY.
-      CREATE OBJECT lo_tar_in.
+      lo_tar_in = zcl_tar=>create( ).
 
       lo_tar_in->load( lv_data ).
 
       lt_files = lo_tar_in->list( ).
 
     CATCH zcx_tar_error INTO lx_error.
-      MESSAGE |{ lx_error->get_text( ) }| TYPE 'I' DISPLAY LIKE 'E'.
+      lv_msg = lx_error->get_text( ).
+      MESSAGE lv_msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
   ENDTRY.
 
   " Save Test
   TRY.
-
-      CREATE OBJECT lo_tar_out.
+      lo_tar_out = zcl_tar=>create( ).
 
       LOOP AT lt_files INTO ls_file.
-        lo_tar_out->add(
+        lo_tar_out->append(
           iv_name     = ls_file-name
           iv_content  = lo_tar_in->get( ls_file-name )
           iv_date     = ls_file-date
@@ -221,10 +227,12 @@ START-OF-SELECTION.
       lv_data = lo_tar_out->save( ).
 
     CATCH zcx_tar_error INTO lx_error.
-      MESSAGE |{ lx_error->get_text( ) }| TYPE 'I' DISPLAY LIKE 'E'.
+      lv_msg = lx_error->get_text( ).
+      MESSAGE lv_msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
   ENDTRY.
 
+  " Download archive
   lcl_files=>download(
     iv_path = p_tar && '_new.tar'
     iv_data = lv_data ).

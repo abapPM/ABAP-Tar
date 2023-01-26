@@ -1,11 +1,9 @@
 REPORT z_tar_tester.
 
 ************************************************************************
-* ABAP Tar
+* Tar Tester
 *
-* https://github.com/Marc-Bernard-Tools/ABAP-Tar
-*
-* Copyright 2022 Marc Bernard <https://marcbernardtools.com/>
+* Copyright 2023 Marc Bernard <https://marcbernardtools.com/>
 * SPDX-License-Identifier: MIT
 ************************************************************************
 
@@ -185,54 +183,54 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_tar.
 START-OF-SELECTION.
 
   DATA:
-    lv_data    TYPE xstring,
-    lv_msg     TYPE string,
-    lo_tar_in  TYPE REF TO zcl_tar,
-    lo_tar_out TYPE REF TO zcl_tar,
-    lx_error   TYPE REF TO zcx_tar_error,
-    lt_files   TYPE zcl_tar=>ty_files,
-    ls_file    TYPE zcl_tar=>ty_file.
+    gv_data    TYPE xstring,
+    gv_msg     TYPE string,
+    go_tar_in  TYPE REF TO zcl_tar,
+    go_tar_out TYPE REF TO zcl_tar,
+    gx_error   TYPE REF TO zcx_tar,
+    gt_files   TYPE zcl_tar=>ty_files,
+    gs_file    TYPE zcl_tar=>ty_file.
 
   " Upload archive
-  lv_data = lcl_files=>upload( p_tar ).
+  gv_data = lcl_files=>upload( p_tar ).
 
   " Load Test
   TRY.
-      lo_tar_in = zcl_tar=>create( ).
+      go_tar_in = zcl_tar=>new( ).
 
-      lo_tar_in->load( lv_data ).
+      go_tar_in->load( gv_data ).
 
-      lt_files = lo_tar_in->list( ).
+      gt_files = go_tar_in->list( ).
 
-    CATCH zcx_tar_error INTO lx_error.
-      lv_msg = lx_error->get_text( ).
-      MESSAGE lv_msg TYPE 'I' DISPLAY LIKE 'E'.
+    CATCH zcx_tar INTO gx_error.
+      gv_msg = gx_error->get_text( ).
+      MESSAGE gv_msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
   ENDTRY.
 
   " Save Test
   TRY.
-      lo_tar_out = zcl_tar=>create( ).
+      go_tar_out = zcl_tar=>new( ).
 
-      LOOP AT lt_files INTO ls_file.
-        lo_tar_out->append(
-          iv_name     = ls_file-name
-          iv_content  = lo_tar_in->get( ls_file-name )
-          iv_date     = ls_file-date
-          iv_time     = ls_file-time
-          iv_mode     = ls_file-mode
-          iv_typeflag = ls_file-typeflag ).
+      LOOP AT gt_files INTO gs_file.
+        go_tar_out->append(
+          iv_name     = gs_file-name
+          iv_content  = go_tar_in->get( gs_file-name )
+          iv_date     = gs_file-date
+          iv_time     = gs_file-time
+          iv_mode     = gs_file-mode
+          iv_typeflag = gs_file-typeflag ).
       ENDLOOP.
 
-      lv_data = lo_tar_out->save( ).
+      gv_data = go_tar_out->save( ).
 
-    CATCH zcx_tar_error INTO lx_error.
-      lv_msg = lx_error->get_text( ).
-      MESSAGE lv_msg TYPE 'I' DISPLAY LIKE 'E'.
+    CATCH zcx_tar INTO gx_error.
+      gv_msg = gx_error->get_text( ).
+      MESSAGE gv_msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
   ENDTRY.
 
   " Download archive
   lcl_files=>download(
     iv_path = p_tar && '.copy.tar'
-    iv_data = lv_data ).
+    iv_data = gv_data ).

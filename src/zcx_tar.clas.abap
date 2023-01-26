@@ -1,12 +1,20 @@
-CLASS zcx_tar_error DEFINITION
+CLASS zcx_tar DEFINITION
   PUBLIC
   INHERITING FROM cx_static_check
   CREATE PUBLIC.
 
+************************************************************************
+* Tar Error
+*
+* Copyright 2023 Marc Bernard <https://marcbernardtools.com/>
+* SPDX-License-Identifier: MIT
+************************************************************************
   PUBLIC SECTION.
 
     INTERFACES if_t100_dyn_msg.
     INTERFACES if_t100_message.
+
+    CLASS-DATA null TYPE string.
 
     METHODS constructor
       IMPORTING
@@ -20,13 +28,13 @@ CLASS zcx_tar_error DEFINITION
     "! Raise exception with text
     "! @parameter iv_text | Text
     "! @parameter ix_previous | Previous exception
-    "! @raising zcx_tar_error | Exception
+    "! @raising zcx_tar | Exception
     CLASS-METHODS raise
       IMPORTING
         !iv_text     TYPE clike
         !ix_previous TYPE REF TO cx_root OPTIONAL
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     "! Raise exception with T100 message
     "! <p>
@@ -39,7 +47,7 @@ CLASS zcx_tar_error DEFINITION
     "! @parameter iv_msgv3 | Message variable 3
     "! @parameter iv_msgv4 | Message variable 4
     "! @parameter ix_previous | Previous exception
-    "! @raising zcx_tar_error | Exception
+    "! @raising zcx_tar | Exception
     CLASS-METHODS raise_t100
       IMPORTING
         VALUE(iv_msgid) TYPE symsgid DEFAULT sy-msgid
@@ -50,16 +58,16 @@ CLASS zcx_tar_error DEFINITION
         VALUE(iv_msgv4) TYPE symsgv DEFAULT sy-msgv4
         !ix_previous    TYPE REF TO cx_root OPTIONAL
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     "! Raise with text from previous exception
     "! @parameter ix_previous | Previous exception
-    "! @raising zcx_tar_error | Exception
+    "! @raising zcx_tar | Exception
     CLASS-METHODS raise_with_text
       IMPORTING
         !ix_previous TYPE REF TO cx_root
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -76,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS zcx_tar_error IMPLEMENTATION.
+CLASS zcx_tar IMPLEMENTATION.
 
 
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
@@ -103,7 +111,6 @@ CLASS zcx_tar_error IMPLEMENTATION.
 
     DATA:
       lv_text TYPE string,
-      lv_rest TYPE string,
       ls_msg  TYPE symsg.
 
     IF iv_text IS INITIAL.
@@ -115,7 +122,7 @@ CLASS zcx_tar_error IMPLEMENTATION.
     ls_msg = split_text_to_symsg( lv_text ).
 
     " Set syst variables using generic error message
-    MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO lv_rest.
+    MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO null.
 
     raise_t100( ix_previous = ix_previous ).
 
@@ -135,7 +142,7 @@ CLASS zcx_tar_error IMPLEMENTATION.
       ls_t100_key-attr4 = 'IF_T100_DYN_MSG~MSGV4'.
     ENDIF.
 
-    RAISE EXCEPTION TYPE zcx_tar_error
+    RAISE EXCEPTION TYPE zcx_tar
       EXPORTING
         textid   = ls_t100_key
         msgv1    = iv_msgv1

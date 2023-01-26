@@ -1,17 +1,16 @@
-CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
+CLASS zcl_tar DEFINITION
+  PUBLIC
+  CREATE PRIVATE.
 
 ************************************************************************
-* ABAP Tar
-*
-* https://github.com/Marc-Bernard-Tools/ABAP-Tar
+* Tar
 *
 * Tar UStar Format
 * Based on https://en.wikipedia.org/wiki/Tar_(computing)
 *
-* Copyright 2022 Marc Bernard <https://marcbernardtools.com/>
+* Copyright 2023 Marc Bernard <https://marcbernardtools.com/>
 * SPDX-License-Identifier: MIT
 ************************************************************************
-
   PUBLIC SECTION.
 
     CONSTANTS c_version TYPE string VALUE '1.0.0' ##NEEDED.
@@ -31,7 +30,7 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
     CLASS-METHODS class_constructor.
 
     "! Create archive
-    CLASS-METHODS create
+    CLASS-METHODS new
       IMPORTING
         !iv_force_ustar TYPE abap_bool DEFAULT abap_false
       RETURNING
@@ -46,14 +45,14 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
       IMPORTING
         !iv_tar TYPE xstring
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     "! Create archive
     METHODS save
       RETURNING
         VALUE(rv_tar) TYPE xstring
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     "! Read file from archive
     METHODS get
@@ -62,14 +61,14 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
       RETURNING
         VALUE(rv_content) TYPE xstring
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     "! List the contents of an archive
     METHODS list
       RETURNING
         VALUE(rt_result) TYPE ty_files
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     "! Append file to archive
     METHODS append
@@ -81,14 +80,14 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
         !iv_mode     TYPE i OPTIONAL
         !iv_typeflag TYPE c OPTIONAL
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     "! Delete file from archive
     METHODS delete
       IMPORTING
         !iv_name TYPE string
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -190,7 +189,7 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
       RETURNING
         VALUE(rv_result) TYPE string
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     METHODS _to_xstring
       IMPORTING
@@ -198,7 +197,7 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
       RETURNING
         VALUE(rv_result) TYPE xstring
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     METHODS _from_filename
       IMPORTING
@@ -207,7 +206,7 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
         !ev_prefix   TYPE ty_header-prefix
         !ev_name     TYPE ty_header-name
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     METHODS _to_filename
       IMPORTING
@@ -223,7 +222,7 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
         !ev_date     TYPE d
         !ev_time     TYPE t
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     METHODS _to_unixtime
       IMPORTING
@@ -232,7 +231,7 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
       RETURNING
         VALUE(rv_result) TYPE i
       RAISING
-        zcx_tar_error.
+        zcx_tar.
 
     METHODS _checksum
       IMPORTING
@@ -240,7 +239,8 @@ CLASS zcl_tar DEFINITION PUBLIC FINAL CREATE PRIVATE.
       RETURNING
         VALUE(rv_result) TYPE i
       RAISING
-        zcx_tar_error.
+        zcx_tar.
+
 ENDCLASS.
 
 
@@ -281,7 +281,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
     INSERT ls_file INTO TABLE mt_files.
     IF sy-subrc <> 0.
-      zcx_tar_error=>raise( 'Error adding file (list)' ).
+      zcx_tar=>raise( 'Error adding file (list)' ).
     ENDIF.
 
     " Data
@@ -289,7 +289,7 @@ CLASS zcl_tar IMPLEMENTATION.
     ls_data-content = iv_content.
     INSERT ls_data INTO TABLE mt_data.
     IF sy-subrc <> 0.
-      zcx_tar_error=>raise( 'Error adding file (data)' ).
+      zcx_tar=>raise( 'Error adding file (data)' ).
     ENDIF.
 
   ENDMETHOD.
@@ -322,25 +322,16 @@ CLASS zcl_tar IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create.
-
-    CREATE OBJECT ro_tar
-      EXPORTING
-        iv_force_ustar = iv_force_ustar.
-
-  ENDMETHOD.
-
-
   METHOD delete.
 
     DELETE mt_files WHERE name = iv_name.
     IF sy-subrc <> 0.
-      zcx_tar_error=>raise( 'Error deleting file (list)' ).
+      zcx_tar=>raise( 'Error deleting file (list)' ).
     ENDIF.
 
     DELETE mt_data WHERE name = iv_name.
     IF sy-subrc <> 0.
-      zcx_tar_error=>raise( 'Error deleting file (data)' ).
+      zcx_tar=>raise( 'Error deleting file (data)' ).
     ENDIF.
 
   ENDMETHOD.
@@ -354,7 +345,7 @@ CLASS zcl_tar IMPLEMENTATION.
     IF sy-subrc = 0.
       rv_content = <ls_data>-content.
     ELSE.
-      zcx_tar_error=>raise( 'Error getting file' ).
+      zcx_tar=>raise( 'Error getting file' ).
     ENDIF.
 
   ENDMETHOD.
@@ -380,7 +371,7 @@ CLASS zcl_tar IMPLEMENTATION.
     lv_size = xstrlen( iv_tar ).
 
     IF lv_size = 0 OR lv_size MOD c_blocksize <> 0.
-      zcx_tar_error=>raise( 'Error loading file (blocksize)' ).
+      zcx_tar=>raise( 'Error loading file (blocksize)' ).
     ENDIF.
 
     CLEAR mt_files.
@@ -404,9 +395,9 @@ CLASS zcl_tar IMPLEMENTATION.
 
       IF mv_force_ustar = abap_true.
         IF ls_header-magic <> c_ustar_magic.
-          zcx_tar_error=>raise( 'Error loading file (ustar)' ).
+          zcx_tar=>raise( 'Error loading file (ustar)' ).
         ELSEIF ls_header-version <> c_ustar_version AND ls_header-version <> ` `.
-          zcx_tar_error=>raise( 'Error loading file (version)' ).
+          zcx_tar=>raise( 'Error loading file (version)' ).
         ENDIF.
       ENDIF.
 
@@ -455,6 +446,15 @@ CLASS zcl_tar IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD new.
+
+    CREATE OBJECT ro_tar
+      EXPORTING
+        iv_force_ustar = iv_force_ustar.
+
+  ENDMETHOD.
+
+
   METHOD save.
 
     DATA:
@@ -473,9 +473,9 @@ CLASS zcl_tar IMPLEMENTATION.
       WHERE typeflag = c_typeflag-file OR typeflag = c_typeflag-directory.
 
       IF strlen( <ls_file>-name ) > 255.
-        zcx_tar_error=>raise( 'Error saving file (name)' ).
+        zcx_tar=>raise( 'Error saving file (name)' ).
       ELSEIF <ls_file>-name CA '\'.
-        zcx_tar_error=>raise( 'Error saving file (path)' ).
+        zcx_tar=>raise( 'Error saving file (path)' ).
       ENDIF.
 
       " Header block
@@ -514,7 +514,7 @@ CLASS zcl_tar IMPLEMENTATION.
       " Data blocks
       READ TABLE mt_data ASSIGNING <ls_data> WITH TABLE KEY name = <ls_file>-name.
       IF sy-subrc <> 0.
-        zcx_tar_error=>raise( 'Error saving file (data)' ).
+        zcx_tar=>raise( 'Error saving file (data)' ).
       ENDIF.
 
       lv_offset = 0.
@@ -589,7 +589,7 @@ CLASS zcl_tar IMPLEMENTATION.
       " Shorten name by moving part of path to prefix
       SPLIT lv_name AT c_path_sep INTO lv_prefix lv_name.
       IF sy-subrc <> 0.
-        zcx_tar_error=>raise( 'Error file name too long' ).
+        zcx_tar=>raise( 'Error file name too long' ).
       ENDIF.
 
       IF ev_prefix IS INITIAL.
@@ -625,7 +625,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
       CATCH cx_parameter_invalid_range
             cx_parameter_invalid_type.
-        zcx_tar_error=>raise( 'Error converting from UNIX time' ).
+        zcx_tar=>raise( 'Error converting from UNIX time' ).
     ENDTRY.
 
     CONVERT TIME STAMP lv_timestamp TIME ZONE 'UTC' INTO DATE ev_date TIME ev_time.
@@ -646,7 +646,7 @@ CLASS zcl_tar IMPLEMENTATION.
       CATCH cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
             cx_parameter_invalid_type.
-        zcx_tar_error=>raise( 'Error converting from xstring' ).
+        zcx_tar=>raise( 'Error converting from xstring' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -719,7 +719,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
       CATCH cx_parameter_invalid_range
             cx_parameter_invalid_type.
-        zcx_tar_error=>raise( 'Error converting to UNIX time' ).
+        zcx_tar=>raise( 'Error converting to UNIX time' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -741,7 +741,7 @@ CLASS zcl_tar IMPLEMENTATION.
       CATCH cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
             cx_parameter_invalid_type.
-        zcx_tar_error=>raise( 'Error converting to xstring' ).
+        zcx_tar=>raise( 'Error converting to xstring' ).
     ENDTRY.
 
   ENDMETHOD.

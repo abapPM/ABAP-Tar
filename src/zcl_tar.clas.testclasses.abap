@@ -6,12 +6,12 @@ CLASS ltcl_tar_tests DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
     METHODS:
       setup,
       null FOR TESTING,
-      filename FOR TESTING RAISING zcx_tar_error,
-      checksum FOR TESTING RAISING zcx_tar_error,
+      filename FOR TESTING RAISING zcx_tar,
+      checksum FOR TESTING RAISING zcx_tar,
       octal FOR TESTING,
       pad FOR TESTING,
-      unixtime FOR TESTING RAISING zcx_tar_error,
-      xstring FOR TESTING RAISING zcx_tar_error.
+      unixtime FOR TESTING RAISING zcx_tar,
+      xstring FOR TESTING RAISING zcx_tar.
 
 ENDCLASS.
 
@@ -20,7 +20,7 @@ CLASS zcl_tar DEFINITION LOCAL FRIENDS ltcl_tar_tests.
 CLASS ltcl_tar_tests IMPLEMENTATION.
 
   METHOD setup.
-    mo_cut = zcl_tar=>create( ).
+    mo_cut = zcl_tar=>new( ).
   ENDMETHOD.
 
   METHOD null.

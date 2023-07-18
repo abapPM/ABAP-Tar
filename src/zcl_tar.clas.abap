@@ -7,6 +7,7 @@ CLASS zcl_tar DEFINITION
 *
 * Tar UStar Format
 * Based on https://en.wikipedia.org/wiki/Tar_(computing)
+* https://en.wikipedia.org/wiki/Gzip
 *
 * Copyright 2023 Marc Bernard <https://marcbernardtools.com/>
 * SPDX-License-Identifier: MIT
@@ -34,7 +35,7 @@ CLASS zcl_tar DEFINITION
       IMPORTING
         !iv_force_ustar TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ro_tar)   TYPE REF TO zcl_tar.
+        VALUE(result)   TYPE REF TO zcl_tar.
 
     METHODS constructor
       IMPORTING
@@ -50,23 +51,23 @@ CLASS zcl_tar DEFINITION
     "! Create archive
     METHODS save
       RETURNING
-        VALUE(rv_tar) TYPE xstring
+        VALUE(result) TYPE xstring
       RAISING
         zcx_tar.
 
     "! Read file from archive
     METHODS get
       IMPORTING
-        !iv_name          TYPE string
+        !iv_name      TYPE string
       RETURNING
-        VALUE(rv_content) TYPE xstring
+        VALUE(result) TYPE xstring
       RAISING
         zcx_tar.
 
     "! List the contents of an archive
     METHODS list
       RETURNING
-        VALUE(rt_result) TYPE ty_files
+        VALUE(result) TYPE ty_files
       RAISING
         zcx_tar.
 
@@ -86,6 +87,24 @@ CLASS zcl_tar DEFINITION
     METHODS delete
       IMPORTING
         !iv_name TYPE string
+      RAISING
+        zcx_tar.
+
+    "! Gzip archive
+    METHODS gzip
+      IMPORTING
+        !iv_tar       TYPE xstring
+      RETURNING
+        VALUE(result) TYPE xstring
+      RAISING
+        zcx_tar.
+
+    "! Gunzip archive
+    METHODS gunzip
+      IMPORTING
+        !iv_gzip      TYPE xstring
+      RETURNING
+        VALUE(result) TYPE xstring
       RAISING
         zcx_tar.
 
@@ -343,7 +362,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
     READ TABLE mt_data ASSIGNING <ls_data> WITH TABLE KEY name = iv_name.
     IF sy-subrc = 0.
-      rv_content = <ls_data>-content.
+      result = <ls_data>-content.
     ELSE.
       zcx_tar=>raise( 'Error getting file' ).
     ENDIF.
@@ -351,8 +370,26 @@ CLASS zcl_tar IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD gunzip.
+    cl_abap_gzip=>decompress_binary(
+      EXPORTING
+        gzip_in = iv_gzip
+      IMPORTING
+        raw_out = result ).
+  ENDMETHOD.
+
+
+  METHOD gzip.
+    cl_abap_gzip=>compress_binary(
+      EXPORTING
+        raw_in   = iv_tar
+      IMPORTING
+        gzip_out = result ).
+  ENDMETHOD.
+
+
   METHOD list.
-    rt_result = mt_files.
+    result = mt_files.
   ENDMETHOD.
 
 
@@ -448,7 +485,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
   METHOD new.
 
-    CREATE OBJECT ro_tar
+    CREATE OBJECT result
       EXPORTING
         iv_force_ustar = iv_force_ustar.
 
@@ -509,7 +546,7 @@ CLASS zcl_tar IMPLEMENTATION.
       ls_header-chksum = _pad( iv_number = _checksum( ls_header ) iv_length = 7 ) && gv_null.
 
       lv_block = _to_xstring( ls_header ).
-      rv_tar   = rv_tar && lv_block.
+      result   = result && lv_block.
 
       " Data blocks
       READ TABLE mt_data ASSIGNING <ls_data> WITH TABLE KEY name = <ls_file>-name.
@@ -527,7 +564,7 @@ CLASS zcl_tar IMPLEMENTATION.
         ELSE.
           lv_block = <ls_data>-content+lv_offset(lv_length).
         ENDIF.
-        rv_tar    = rv_tar && lv_block.
+        result    = result && lv_block.
         lv_offset = lv_offset + c_blocksize.
         lv_length = lv_length - c_blocksize.
       ENDDO.

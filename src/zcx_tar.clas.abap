@@ -6,7 +6,7 @@ CLASS zcx_tar DEFINITION
 ************************************************************************
 * Tar Error
 *
-* Copyright 2023 Marc Bernard <https://marcbernardtools.com/>
+* Copyright 2024 apm.to Inc. <https://apm.to>
 * SPDX-License-Identifier: MIT
 ************************************************************************
   PUBLIC SECTION.

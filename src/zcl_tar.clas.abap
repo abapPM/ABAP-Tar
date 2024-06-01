@@ -9,7 +9,7 @@ CLASS zcl_tar DEFINITION
 * Based on https://en.wikipedia.org/wiki/Tar_(computing)
 * https://en.wikipedia.org/wiki/Gzip
 *
-* Copyright 2023 Marc Bernard <https://marcbernardtools.com/>
+* Copyright 2024 apm.to Inc. <https://apm.to>
 * SPDX-License-Identifier: MIT
 ************************************************************************
   PUBLIC SECTION.

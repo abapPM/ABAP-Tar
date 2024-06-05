@@ -183,13 +183,15 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_tar.
 START-OF-SELECTION.
 
   DATA:
-    gv_data    TYPE xstring,
-    gv_msg     TYPE string,
-    go_tar_in  TYPE REF TO zcl_tar,
-    go_tar_out TYPE REF TO zcl_tar,
-    gx_error   TYPE REF TO zcx_tar,
-    gt_files   TYPE zcl_tar=>ty_files,
-    gs_file    TYPE zcl_tar=>ty_file.
+    gv_data     TYPE xstring,
+    gv_unpacked TYPE xstring,
+    gv_packed   TYPE xstring,
+    gv_msg      TYPE string,
+    go_tar_in   TYPE REF TO zcl_tar,
+    go_tar_out  TYPE REF TO zcl_tar,
+    gx_error    TYPE REF TO zcx_tar,
+    gt_files    TYPE zcl_tar=>ty_files,
+    gs_file     TYPE zcl_tar=>ty_file.
 
   " Upload archive
   gv_data = lcl_files=>upload( p_tar ).
@@ -198,7 +200,15 @@ START-OF-SELECTION.
   TRY.
       go_tar_in = zcl_tar=>new( ).
 
-      go_tar_in->load( gv_data ).
+      IF p_tar CP '*.tgz'.
+        data(obj) = zcl_abapgit_zlib=>decompress( gv_data ).
+        "data(obj) = zcl_abapgit_git_pack=>decode( gv_data ).
+        "gv_unpacked = go_tar_in->gunzip( gv_data ).
+      ELSE.
+        gv_unpacked = gv_data.
+      ENDIF.
+
+      go_tar_in->load( gv_unpacked ).
 
       gt_files = go_tar_in->list( ).
 
@@ -234,3 +244,10 @@ START-OF-SELECTION.
   lcl_files=>download(
     iv_path = p_tar && '.copy.tar'
     iv_data = gv_data ).
+
+  " Gzip
+  gv_packed = go_tar_in->gzip( gv_data ).
+
+  lcl_files=>download(
+    iv_path = p_tar && '.copy.tgz'
+    iv_data = gv_packed ).

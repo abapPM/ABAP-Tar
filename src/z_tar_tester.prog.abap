@@ -189,7 +189,7 @@ START-OF-SELECTION.
     gv_msg      TYPE string,
     go_tar_in   TYPE REF TO zcl_tar,
     go_tar_out  TYPE REF TO zcl_tar,
-    gx_error    TYPE REF TO zcx_tar,
+    gx_error    TYPE REF TO zcx_error,
     gt_files    TYPE zcl_tar=>ty_files,
     gs_file     TYPE zcl_tar=>ty_file.
 
@@ -212,7 +212,7 @@ START-OF-SELECTION.
 
       gt_files = go_tar_in->list( ).
 
-    CATCH zcx_tar INTO gx_error.
+    CATCH zcx_error INTO gx_error.
       gv_msg = gx_error->get_text( ).
       MESSAGE gv_msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
@@ -234,7 +234,7 @@ START-OF-SELECTION.
 
       gv_data = go_tar_out->save( ).
 
-    CATCH zcx_tar INTO gx_error.
+    CATCH zcx_error INTO gx_error.
       gv_msg = gx_error->get_text( ).
       MESSAGE gv_msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.

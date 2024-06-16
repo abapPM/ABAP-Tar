@@ -183,71 +183,70 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_tar.
 START-OF-SELECTION.
 
   DATA:
-    gv_data     TYPE xstring,
-    gv_unpacked TYPE xstring,
-    gv_packed   TYPE xstring,
-    gv_msg      TYPE string,
-    go_tar_in   TYPE REF TO zcl_tar,
-    go_tar_out  TYPE REF TO zcl_tar,
-    gx_error    TYPE REF TO zcx_error,
-    gt_files    TYPE zcl_tar=>ty_files,
-    gs_file     TYPE zcl_tar=>ty_file.
+    lv_data     TYPE xstring,
+    lv_unpacked TYPE xstring,
+    lv_packed   TYPE xstring,
+    lv_msg      TYPE string,
+    lo_tar_in   TYPE REF TO zcl_tar,
+    lo_tar_out  TYPE REF TO zcl_tar,
+    lx_error    TYPE REF TO zcx_error,
+    lt_files    TYPE zcl_tar=>ty_files,
+    ls_file     TYPE zcl_tar=>ty_file.
 
   " Upload archive
-  gv_data = lcl_files=>upload( p_tar ).
+  lv_data = lcl_files=>upload( p_tar ).
 
   " Load Test
   TRY.
-      go_tar_in = zcl_tar=>new( ).
+      lo_tar_in = zcl_tar=>new( ).
 
-      IF p_tar CP '*.tgz'.
-        data(obj) = zcl_abapgit_zlib=>decompress( gv_data ).
-        "data(obj) = zcl_abapgit_git_pack=>decode( gv_data ).
-        "gv_unpacked = go_tar_in->gunzip( gv_data ).
+      " Gunzip
+      IF p_tar CP '*.tgz' OR p_tar CP '*.tar.gz'.
+        lv_unpacked = lo_tar_in->gunzip( lv_data ).
       ELSE.
-        gv_unpacked = gv_data.
+        lv_unpacked = lv_data.
       ENDIF.
 
-      go_tar_in->load( gv_unpacked ).
+      lo_tar_in->load( lv_unpacked ).
 
-      gt_files = go_tar_in->list( ).
+      lt_files = lo_tar_in->list( ).
 
-    CATCH zcx_error INTO gx_error.
-      gv_msg = gx_error->get_text( ).
-      MESSAGE gv_msg TYPE 'I' DISPLAY LIKE 'E'.
+    CATCH zcx_error INTO lx_error.
+      lv_msg = lx_error->get_text( ).
+      MESSAGE lv_msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
   ENDTRY.
 
   " Save Test
   TRY.
-      go_tar_out = zcl_tar=>new( ).
+      lo_tar_out = zcl_tar=>new( ).
 
-      LOOP AT gt_files INTO gs_file.
-        go_tar_out->append(
-          iv_name     = gs_file-name
-          iv_content  = go_tar_in->get( gs_file-name )
-          iv_date     = gs_file-date
-          iv_time     = gs_file-time
-          iv_mode     = gs_file-mode
-          iv_typeflag = gs_file-typeflag ).
+      LOOP AT lt_files INTO ls_file.
+        lo_tar_out->append(
+          iv_name     = ls_file-name
+          iv_content  = lo_tar_in->get( ls_file-name )
+          iv_date     = ls_file-date
+          iv_time     = ls_file-time
+          iv_mode     = ls_file-mode
+          iv_typeflag = ls_file-typeflag ).
       ENDLOOP.
 
-      gv_data = go_tar_out->save( ).
+      lv_data = lo_tar_out->save( ).
 
-    CATCH zcx_error INTO gx_error.
-      gv_msg = gx_error->get_text( ).
-      MESSAGE gv_msg TYPE 'I' DISPLAY LIKE 'E'.
+      " Gzip
+      lv_packed = lo_tar_out->gzip( lv_data ).
+
+    CATCH zcx_error INTO lx_error.
+      lv_msg = lx_error->get_text( ).
+      MESSAGE lv_msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
   ENDTRY.
 
   " Download archive
   lcl_files=>download(
     iv_path = p_tar && '.copy.tar'
-    iv_data = gv_data ).
-
-  " Gzip
-  gv_packed = go_tar_in->gzip( gv_data ).
+    iv_data = lv_data ).
 
   lcl_files=>download(
     iv_path = p_tar && '.copy.tgz'
-    iv_data = gv_packed ).
+    iv_data = lv_packed ).

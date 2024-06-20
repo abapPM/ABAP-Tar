@@ -114,11 +114,11 @@ All contributions are welcome! Read our [Contribution Guidelines](CONTRIBUTING.m
 
 You can install the developer version of ABAP Tar using [abapGit](https://github.com/abapGit/abapGit) either by creating a new online repository for https://github.com/abapPM/ABAP-Tar.
 
-Recommended SAP package: `$TAR`.
+Recommended SAP package: `$TAR`
 
 ## About
 
-Made with :heart: in Canada
+Made with ❤️ in Canada
 
 Copyright 2024 apm.to Inc. <https://apm.to>
 

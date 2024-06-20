@@ -33,7 +33,7 @@
   ],
   "license": "MIT",
   "repository": {
-    "url": "https://github.com/abapPM/ABAP-Tar"
+    "url": "git+https://github.com/abapPM/ABAP-Tar.git"
   },
   "type": "module"
 }

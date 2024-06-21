@@ -1,6 +1,6 @@
 ![Version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapPM/ABAP-Tar/src/zcl_tar.clas.abap/c_version&label=Version&color=blue)
 
-[![License](https://img.shields.io/github/license/abapPM/ABAP-Tar?label=License&&color=success)](LICENSE)
+[![License](https://img.shields.io/github/license/abapPM/ABAP-Tar?label=License&&color=success)](https://github.com/abapPM/ABAP-Tar/blob/main/LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg?&color=success)](https://github.com/abapPM/.github/blob/main/CODE_OF_CONDUCT.md)
 [![REUSE Status](https://api.reuse.software/badge/github.com/abapPM/ABAP-Tar)](https://api.reuse.software/info/github.com/abapPM/ABAP-Tar)
 
@@ -10,7 +10,7 @@ This is an implementation of the UStar Tar format as described on [Wikipedia](ht
 
 Archives can be compressed and decompressed using [gzip and gunzip](https://en.wikipedia.org/wiki/Gzip) methods as well.
 
-NO WARRANTIES, [MIT License](LICENSE)
+NO WARRANTIES, [MIT License](https://github.com/abapPM/ABAP-Tar/blob/main/LICENSE)
 
 ## Usage
 
@@ -110,7 +110,7 @@ IMPORT '*' TO '/namespace/$1$2' FROM 'tar'.
 
 ## Contributions
 
-All contributions are welcome! Read our [Contribution Guidelines](CONTRIBUTING.md), fork this repo, and create a pull request.
+All contributions are welcome! Read our [Contribution Guidelines](https://github.com/abapPM/ABAP-Tar/blob/main/CONTRIBUTING.md), fork this repo, and create a pull request.
 
 You can install the developer version of ABAP Tar using [abapGit](https://github.com/abapGit/abapGit) either by creating a new online repository for https://github.com/abapPM/ABAP-Tar.
 

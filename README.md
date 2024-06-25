@@ -122,4 +122,4 @@ Made with ❤️ in Canada
 
 Copyright 2024 apm.to Inc. <https://apm.to>
 
-Follow [@marcfbe](https://twitter.com/marcfbe) on X/Twitter
+Follow [@marcfbe](https://twitter.com/marcfbe) on X/Twitter or [marcfbe](https://linkedin.com/in/marcfbe) or LinkedIn

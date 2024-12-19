@@ -17,24 +17,24 @@ CLASS lcl_files DEFINITION.
 
     CLASS-METHODS open_dialog
       RETURNING
-        VALUE(rv_result) TYPE string.
+        VALUE(result) TYPE string.
 
     CLASS-METHODS upload
       IMPORTING
-        !iv_path         TYPE string
+        !path         TYPE string
       RETURNING
-        VALUE(rv_result) TYPE xstring.
+        VALUE(result) TYPE xstring.
 
     CLASS-METHODS download
       IMPORTING
-        !iv_path TYPE string
-        !iv_data TYPE xstring.
+        !path   TYPE string
+        !buffer TYPE xstring.
 
   PRIVATE SECTION.
 
     TYPES ty_hex TYPE x LENGTH 2048.
 
-    TYPES ty_data TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
+    TYPES ty_data_table TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
 
 ENDCLASS.
 
@@ -43,22 +43,21 @@ CLASS lcl_files IMPLEMENTATION.
   METHOD open_dialog.
 
     DATA:
-      lt_file_table TYPE filetable,
-      ls_file_table LIKE LINE OF lt_file_table,
-      lv_filter     TYPE string,
-      lv_action     TYPE i,
-      lv_rc         TYPE i.
+      file_table TYPE filetable,
+      file_item  LIKE LINE OF file_table,
+      action     TYPE i,
+      rc         TYPE i.
 
-    lv_filter = 'TAR Files (*.tar)|*.tar|' && cl_gui_frontend_services=>filetype_all.
+    DATA(filter) = 'TAR Files (*.tar)|*.tar|' && cl_gui_frontend_services=>filetype_all.
 
     cl_gui_frontend_services=>file_open_dialog(
       EXPORTING
         window_title            = 'Select TAR File'
-        file_filter             = lv_filter
+        file_filter             = filter
       CHANGING
-        file_table              = lt_file_table
-        rc                      = lv_rc
-        user_action             = lv_action
+        file_table              = file_table
+        rc                      = rc
+        user_action             = action
       EXCEPTIONS
         file_open_dialog_failed = 1
         cntl_error              = 2
@@ -69,32 +68,32 @@ CLASS lcl_files IMPLEMENTATION.
       MESSAGE 'File open dialog error' TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
     ENDIF.
-    IF lv_action = cl_gui_frontend_services=>action_cancel.
+    IF action = cl_gui_frontend_services=>action_cancel.
       MESSAGE 'Cancelled' TYPE 'S'.
       RETURN.
     ENDIF.
 
-    READ TABLE lt_file_table INDEX 1 INTO ls_file_table.
+    READ TABLE file_table INDEX 1 INTO file_item.
     ASSERT sy-subrc = 0.
 
-    rv_result = ls_file_table-filename.
+    result = file_item-filename.
 
   ENDMETHOD.
 
   METHOD upload.
 
     DATA:
-      lt_data   TYPE ty_data,
-      lv_length TYPE i.
+      data_table  TYPE ty_data_table,
+      data_length TYPE i.
 
     cl_gui_frontend_services=>gui_upload(
       EXPORTING
-        filename                = iv_path
+        filename                = path
         filetype                = 'BIN'
       IMPORTING
-        filelength              = lv_length
+        filelength              = data_length
       CHANGING
-        data_tab                = lt_data
+        data_tab                = data_table
       EXCEPTIONS
         file_open_error         = 1
         file_read_error         = 2
@@ -120,28 +119,28 @@ CLASS lcl_files IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CONCATENATE LINES OF lt_data INTO rv_result IN BYTE MODE.
-    rv_result = rv_result(lv_length).
+    CONCATENATE LINES OF data_table INTO result IN BYTE MODE.
+    result = result(data_length).
 
   ENDMETHOD.
 
   METHOD download.
 
-    DATA lt_data TYPE ty_data.
+    DATA data_table TYPE ty_data_table.
 
     CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
       EXPORTING
-        buffer     = iv_data
+        buffer     = buffer
       TABLES
-        binary_tab = lt_data.
+        binary_tab = data_table.
 
     cl_gui_frontend_services=>gui_download(
       EXPORTING
-        bin_filesize              = xstrlen( iv_data )
-        filename                  = iv_path
+        bin_filesize              = xstrlen( buffer )
+        filename                  = path
         filetype                  = 'BIN'
       CHANGING
-        data_tab                  = lt_data
+        data_tab                  = data_table
       EXCEPTIONS
         file_write_error          = 1
         no_batch                  = 2
@@ -183,70 +182,67 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_tar.
 START-OF-SELECTION.
 
   DATA:
-    lv_data     TYPE xstring,
-    lv_unpacked TYPE xstring,
-    lv_packed   TYPE xstring,
-    lv_msg      TYPE string,
-    lo_tar_in   TYPE REF TO zcl_tar,
-    lo_tar_out  TYPE REF TO zcl_tar,
-    lx_error    TYPE REF TO zcx_error,
-    lt_files    TYPE zcl_tar=>ty_files,
-    ls_file     TYPE zcl_tar=>ty_file.
+    data     TYPE xstring,
+    unpacked TYPE xstring,
+    packed   TYPE xstring,
+    msg      TYPE string,
+    files    TYPE zcl_tar=>ty_files,
+    file     TYPE zcl_tar=>ty_file.
 
   " Upload archive
-  lv_data = lcl_files=>upload( p_tar ).
+  data = lcl_files=>upload( p_tar ).
 
   " Load Test
   TRY.
-      lo_tar_in = zcl_tar=>new( ).
+      DATA(tar_in) = zcl_tar=>new( ).
 
       " Gunzip
       IF p_tar CP '*.tgz' OR p_tar CP '*.tar.gz'.
-        lv_unpacked = lo_tar_in->gunzip( lv_data ).
+        unpacked = tar_in->gunzip( data ).
       ELSE.
-        lv_unpacked = lv_data.
+        unpacked = data.
       ENDIF.
 
-      lo_tar_in->load( lv_unpacked ).
+      tar_in->load( unpacked ).
 
-      lt_files = lo_tar_in->list( ).
+      files = tar_in->list( ).
 
-    CATCH zcx_error INTO lx_error.
-      lv_msg = lx_error->get_text( ).
-      MESSAGE lv_msg TYPE 'I' DISPLAY LIKE 'E'.
+    CATCH zcx_error INTO DATA(error).
+      msg = error->get_text( ).
+      MESSAGE msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
   ENDTRY.
 
   " Save Test
   TRY.
-      lo_tar_out = zcl_tar=>new( ).
+      DATA(tar_out) = zcl_tar=>new( ).
 
-      LOOP AT lt_files INTO ls_file.
-        lo_tar_out->append(
-          iv_name     = ls_file-name
-          iv_content  = lo_tar_in->get( ls_file-name )
-          iv_date     = ls_file-date
-          iv_time     = ls_file-time
-          iv_mode     = ls_file-mode
-          iv_typeflag = ls_file-typeflag ).
+      LOOP AT files INTO file.
+        tar_out->append(
+          name     = file-name
+          content  = tar_in->get( file-name )
+          date     = file-date
+          time     = file-time
+          mode     = file-mode
+          typeflag = file-typeflag ).
       ENDLOOP.
 
-      lv_data = lo_tar_out->save( ).
+      data = tar_out->save( ).
 
       " Gzip
-      lv_packed = lo_tar_out->gzip( lv_data ).
+      packed = tar_out->gzip( data ).
 
-    CATCH zcx_error INTO lx_error.
-      lv_msg = lx_error->get_text( ).
-      MESSAGE lv_msg TYPE 'I' DISPLAY LIKE 'E'.
+    CATCH zcx_error INTO error.
+      msg = error->get_text( ).
+      MESSAGE msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
   ENDTRY.
 
   " Download archive
   lcl_files=>download(
-    iv_path = p_tar && '.copy.tar'
-    iv_data = lv_data ).
+    path   = p_tar && '.copy.tar'
+    buffer = data ).
 
   lcl_files=>download(
-    iv_path = p_tar && '.copy.tgz'
-    iv_data = lv_packed ).
+    path   = p_tar && '.copy.tgz'
+    buffer = packed ).

@@ -1,7 +1,7 @@
 CLASS ltcl_tar_tests DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    DATA mo_cut TYPE REF TO zcl_tar.
+    DATA cut TYPE REF TO zcl_tar.
 
     " TODO:
     " So far tests cover only helper methods but it needs tests to validated the tar methods
@@ -24,30 +24,30 @@ CLASS zcl_tar DEFINITION LOCAL FRIENDS ltcl_tar_tests.
 CLASS ltcl_tar_tests IMPLEMENTATION.
 
   METHOD setup.
-    mo_cut = zcl_tar=>new( ).
+    cut = zcl_tar=>new( ).
   ENDMETHOD.
 
   METHOD null.
 
     DATA:
-      lv_null TYPE c LENGTH 1,
+      null TYPE c LENGTH 1,
       BEGIN OF ls_data,
         name TYPE c LENGTH 10,
         size TYPE c LENGTH 5,
         mode TYPE c LENGTH 8,
       END OF ls_data.
 
-    lv_null = mo_cut->gv_null(1).
+    null = cut->null(1).
 
     ls_data-name = 'test.txt'.
     ls_data-size = '12345'.
     ls_data-mode = '01234'.
 
-    mo_cut->_append_nulls( CHANGING cg_data = ls_data ).
+    cut->_append_nulls( CHANGING data = ls_data ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_data-name
-      exp = 'test.txt' && lv_null && lv_null ).
+      exp = 'test.txt' && null && null ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_data-size
@@ -55,9 +55,9 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_data-mode
-      exp = '01234' && lv_null && lv_null && lv_null ).
+      exp = '01234' && null && null && null ).
 
-    mo_cut->_remove_nulls( CHANGING cg_data = ls_data ).
+    cut->_remove_nulls( CHANGING data = ls_data ).
 
     cl_abap_unit_assert=>assert_equals(
       act = ls_data-name
@@ -76,48 +76,48 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
   METHOD filename.
 
     DATA:
-      lv_filename TYPE string,
-      lv_prefix   TYPE zcl_tar=>ty_header-prefix,
-      lv_name     TYPE zcl_tar=>ty_header-name.
+      filename TYPE string,
+      prefix   TYPE zcl_tar=>ty_header-prefix,
+      name     TYPE zcl_tar=>ty_header-name.
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_to_filename( iv_prefix = 'package/modules' iv_name = 'tar.sh' )
+      act = cut->_to_filename( prefix = 'package/modules' name = 'tar.sh' )
       exp = 'package/modules/tar.sh' ).
 
     " Short filename
-    mo_cut->_from_filename(
+    cut->_from_filename(
       EXPORTING
-        iv_filename = 'package/modules/tar.sh'
+        filename = 'package/modules/tar.sh'
       IMPORTING
-        ev_prefix   = lv_prefix
-        ev_name     = lv_name ).
+        prefix   = prefix
+        name     = name ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lv_prefix
+      act = prefix
       exp = '' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lv_name
+      act = name
       exp = 'package/modules/tar.sh' ).
 
     " Long filename
-    lv_filename = 'package/node_modules/node-gyp/node_modules/path-array/' &&
+    filename = 'package/node_modules/node-gyp/node_modules/path-array/' &&
       'node_modules/array-index/node_modules/es6-symbol/case-insensitive-compare.js'.
 
-    mo_cut->_from_filename(
+    cut->_from_filename(
       EXPORTING
-        iv_filename = lv_filename
+        filename = filename
       IMPORTING
-        ev_prefix   = lv_prefix
-        ev_name     = lv_name ).
+        prefix   = prefix
+        name     = name ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lv_prefix
+      act = prefix
       exp = 'package/node_modules/node-gyp' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lv_prefix && '/' && lv_name
-      exp = lv_filename ).
+      act = prefix && '/' && name
+      exp = filename ).
 
   ENDMETHOD.
 
@@ -126,7 +126,7 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
     CONSTANTS lc_data TYPE string VALUE 'abc 123'.
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_checksum( lc_data )
+      act = cut->_checksum( lc_data )
       exp = 476 ).
 
   ENDMETHOD.
@@ -134,35 +134,35 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
   METHOD octal.
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_to_octal( 0 )
+      act = cut->_to_octal( 0 )
       exp = '0' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_to_octal( 143 )
+      act = cut->_to_octal( 143 )
       exp = '217' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_to_octal( 4565 )
+      act = cut->_to_octal( 4565 )
       exp = '10725' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_to_octal( 498112 )
+      act = cut->_to_octal( 498112 )
       exp = '1714700' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_from_octal( '0' )
+      act = cut->_from_octal( '0' )
       exp = 0 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_from_octal( '217' )
+      act = cut->_from_octal( '217' )
       exp = 143 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_from_octal( '10725' )
+      act = cut->_from_octal( '10725' )
       exp = 4565 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_from_octal( '1714700' )
+      act = cut->_from_octal( '1714700' )
       exp = 498112 ).
 
   ENDMETHOD.
@@ -170,35 +170,35 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
   METHOD pad.
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_pad( iv_number = 0 iv_length = 4 )
+      act = cut->_pad( number = 0 length = 4 )
       exp = '0000' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_pad( iv_number = 143 iv_length = 8 )
+      act = cut->_pad( number = 143 length = 8 )
       exp = '00000217' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_pad( iv_number = 4565 iv_length = 8 )
+      act = cut->_pad( number = 4565 length = 8 )
       exp = '00010725' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_pad( iv_number = 498112 iv_length = 12 )
+      act = cut->_pad( number = 498112 length = 12 )
       exp = '000001714700' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_unpad( '0000' )
+      act = cut->_unpad( '0000' )
       exp = 0 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_unpad( '00000217' )
+      act = cut->_unpad( '00000217' )
       exp = 143 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_unpad( '00010725' )
+      act = cut->_unpad( '00010725' )
       exp = 4565 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_unpad( '000001714700' )
+      act = cut->_unpad( '000001714700' )
       exp = 498112 ).
 
   ENDMETHOD.
@@ -206,26 +206,26 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
   METHOD unixtime.
 
     DATA:
-      lv_date TYPE d,
-      lv_time TYPE t.
+      date TYPE d,
+      time TYPE t.
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_to_unixtime( iv_date = '20221126' iv_time = '123456' )
+      act = cut->_to_unixtime( date = '20221126' time = '123456' )
       exp = 1669466096 ).
 
-    mo_cut->_from_unixtime(
+    cut->_from_unixtime(
       EXPORTING
-        iv_unixtime = 1669466096
+        unixtime = 1669466096
       IMPORTING
-        ev_date     = lv_date
-        ev_time     = lv_time ).
+        date     = date
+        time     = time ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lv_date
+      act = date
       exp = '20221126' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lv_time
+      act = time
       exp = '123456' ).
 
   ENDMETHOD.
@@ -233,11 +233,11 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
   METHOD xstring.
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_to_xstring( 'abc 123 -' )
+      act = cut->_to_xstring( 'abc 123 -' )
       exp = '61626320313233202D' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_cut->_from_xstring( '61626320313233202D' )
+      act = cut->_from_xstring( '61626320313233202D' )
       exp = 'abc 123 -' ).
 
   ENDMETHOD.

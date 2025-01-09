@@ -1,14 +1,14 @@
 {
 	"dependencies": [
 	  {
-		"files": "/src/**/*.*",
-		"folder": "/deps",
-		"url": "https://github.com/abaplint/deps"
+		  "files": "/src/**/*.*",
+		  "folder": "/deps",
+		  "url": "https://github.com/abaplint/deps"
 	  },
 	  {
-		"files": "/src/**/*.*",
-		"folder": "/deps2",
-		"url": "https://github.com/abapPM/ABAP-Error"
+		  "files": "/src/**/*.*",
+		  "folder": "/deps2",
+		  "url": "https://github.com/abapPM/ABAP-Error"
 	  },
 	],
 	"global": {
@@ -47,7 +47,7 @@
 	  "change_if_to_case": true,
 	  "check_abstract": true,
 	  "check_comments": {
-		"allowEndOfLine": true
+		  "allowEndOfLine": true
 	  },
 	  "check_ddic": true,
 	  "check_include": true,
@@ -78,26 +78,26 @@
 	  "empty_statement": true,
 	  "empty_structure": true,
 	  "exit_or_check": {
-		"allowCheck": true,
-		"allowExit": false
+		  "allowCheck": true,
+		  "allowExit": false
 	  },
 	  "expand_macros": true,
 	  "exporting": true,
 	  "forbidden_identifier": true,
 	  "forbidden_pseudo_and_pragma": true,
 	  "forbidden_void_type": {
-		"check": [
-		  "^STRINGTAB$",
-		  "^CHAR[0-9]+$",
-		  "^INT4$",
-		  "^RS_C_TRUE$",
-		  "^RS_C_FALSE$",
-		  "^FLAG$",
-		  "^SYDATUM$",
-		  "^SYINDEX$",
-		  "^SYTABIX$",
-		  "^SYUZEIT$"
-		]
+		  "check": [
+  		  "^STRINGTAB$",
+	  	  "^CHAR[0-9]+$",
+		    "^INT4$",
+		    "^RS_C_TRUE$",
+  		  "^RS_C_FALSE$",
+	  	  "^FLAG$",
+		    "^SYDATUM$",
+		    "^SYINDEX$",
+  		  "^SYTABIX$",
+	  	  "^SYUZEIT$"
+  		]
 	  },
 	  "form_tables_obsolete": true,
 	  "fully_type_constants": true,
@@ -113,14 +113,21 @@
 	  "implement_methods": true,
 	  "implicit_start_of_selection": true,
 	  "in_statement_indentation": false,
-	  "indentation": true,
+	  "indentation": {
+		  "ignoreExceptions": true,
+		  "alignTryCatch": false,
+		  "selectionScreenBlockIndentation": true,
+		  "globalClassSkipFirst": false,
+		  "ignoreGlobalClassDefinition": false,
+		  "ignoreGlobalInterface": false
+	  },
 	  "inline_data_old_versions": true,
 	  "intf_referencing_clas": true,
 	  "invalid_table_index": true,
 	  "keep_single_parameter_on_one_line": true,
 	  "keyword_case": true,
 	  "line_break_multiple_parameters": {
-		"count": 3
+	  	"count": 3
 	  },
 	  "line_break_style": true,
 	  "line_length": true,
@@ -149,56 +156,56 @@
 	  "no_external_form_calls": true,
 	  "no_inline_in_optional_branches": false,
 	  "no_prefixes": {
-		"data": "^[LGM].?_",
-		"statics": "^S.?_",
-		"fieldSymbols": "^<[LGM].?_",
-		"constants": "^[LGM]C_",
-		"types": "^.*_TY_",
-		"methodParameters": "^[ICER].?_",
-		"allowIsPrefixBoolean": true
+  		"data": "^[LGM].?_",
+	  	"statics": "^S.?_",
+		  "fieldSymbols": "^<[LGM].?_",
+  		"constants": "^[LGM]C_",
+	  	"types": "^.*_TY_",
+		  "methodParameters": "^[ICER].?_",
+		  "allowIsPrefixBoolean": true
 	  },
 	  "no_public_attributes": {
-		"allowReadOnly": true,
-		"ignoreTestClasses": false
+  		"allowReadOnly": true,
+	  	"ignoreTestClasses": false
 	  },
 	  "no_yoda_conditions": true,
 	  "nrob_consistency": true,
 	  "object_naming": {
-		"aqbg": "^ZABAPPM",
-		"aqqu": "^ZABAPPM",
-		"aqsg": "^ZABAPPM",
-		"auth": "^ZABAPPM",
-		"clas": "^ZC(L|X)\\_TAR",
-		"cmod": "^ZABAPPM",
-		"doma": "^ZABAPPM",
-		"dtel": "^ZABAPPM",
-		"enho": "^ZABAPPM",
-		"enhs": "^ZABAPPM",
-		"enqu": "^EZABAPPM",
-		"form": "^ZABAPPM",
-		"fugr": "^ZABAPPM",
-		"idoc": "^ZABAPPM",
-		"ignoreNames": [],
-		"ignorePatterns": [],
-		"intf": "^ZIF\\_TAR",
-		"msag": "^ZABAPPM",
-		"patternKind": "required",
-		"pinf": "^ZABAPPM",
-		"prog": "^ZABAPPM",
-		"sfpf": "^ZABAPPM",
-		"sfpi": "^ZABAPPM",
-		"shlp": "^ZABAPPM",
-		"ssfo": "^ZABAPPM",
-		"ssst": "^ZABAPPM",
-		"sucu": "^ZABAPPM",
-		"suso": "^ZABAPPM",
-		"sxci": "^ZABAPPM",
-		"tabl": "^ZABAPPM",
-		"tran": "^ZABAPPM",
-		"ttyp": "^ZABAPPM",
-		"wdya": "^ZABAPPM",
-		"wdyn": "^ZABAPPM",
-		"xslt": "^ZABAPPM"
+  		"aqbg": "^ZABAPPM",
+  		"aqqu": "^ZABAPPM",
+  		"aqsg": "^ZABAPPM",
+  		"auth": "^ZABAPPM",
+  		"clas": "^ZC(L|X)\\_TAR",
+  		"cmod": "^ZABAPPM",
+  		"doma": "^ZABAPPM",
+  		"dtel": "^ZABAPPM",
+  		"enho": "^ZABAPPM",
+  		"enhs": "^ZABAPPM",
+  		"enqu": "^EZABAPPM",
+  		"form": "^ZABAPPM",
+  		"fugr": "^ZABAPPM",
+  		"idoc": "^ZABAPPM",
+  		"ignoreNames": [],
+  		"ignorePatterns": [],
+  		"intf": "^ZIF\\_TAR",
+  		"msag": "^ZABAPPM",
+  		"patternKind": "required",
+  		"pinf": "^ZABAPPM",
+  		"prog": "^Z_TAR",
+  		"sfpf": "^ZABAPPM",
+  		"sfpi": "^ZABAPPM",
+  		"shlp": "^ZABAPPM",
+  		"ssfo": "^ZABAPPM",
+  		"ssst": "^ZABAPPM",
+  		"sucu": "^ZABAPPM",
+  		"suso": "^ZABAPPM",
+  		"sxci": "^ZABAPPM",
+  		"tabl": "^ZABAPPM",
+  		"tran": "^ZABAPPM",
+  		"ttyp": "^ZABAPPM",
+  		"wdya": "^ZABAPPM",
+  		"wdyn": "^ZABAPPM",
+  		"xslt": "^ZABAPPM"
 	  },
 	  "obsolete_statement": true,
 	  "omit_parameter_name": true,
@@ -272,4 +279,4 @@
 	  "globalMacros": [],
 	  "version": "v750"
 	}
-  }
+}

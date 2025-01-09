@@ -73,6 +73,13 @@ LOOP AT files INTO DATA(file).
 ENDLOOP.
 ```
 
+You can use program `Z_TAR_TESTER` to test the methods:
+
+- upload a tar file
+- untar it
+- tar it again
+- save it as a clone of the original tar file
+
 ## Prerequisites
 
 SAP Basis 7.50 or higher

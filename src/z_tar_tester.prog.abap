@@ -1,11 +1,11 @@
-REPORT z_tar_tester.
-
 ************************************************************************
 * Tar Tester
 *
 * Copyright 2024 apm.to Inc. <https://apm.to>
 * SPDX-License-Identifier: MIT
 ************************************************************************
+
+REPORT z_tar_tester.
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
   PARAMETERS p_tar TYPE string LOWER CASE OBLIGATORY.
@@ -186,7 +186,7 @@ START-OF-SELECTION.
     unpacked TYPE xstring,
     packed   TYPE xstring,
     msg      TYPE string,
-    files    TYPE zcl_tar=>ty_files,
+    files    TYPE zcl_tar=>ty_tar_files,
     file     TYPE zcl_tar=>ty_file.
 
   " Upload archive

@@ -6,11 +6,13 @@
 
 # Tar for ABAP
 
-This is an implementation of the UStar Tar format as described on [Wikipedia](https://en.wikipedia.org/wiki/Tar_(computing)). 
+This is an implementation of the [ustar](https://en.wikipedia.org/wiki/Tar_(computing)) and [pax](https://en.wikipedia.org/wiki/Pax_(command)) tar formats. 
 
 Archives can be compressed and decompressed using [gzip and gunzip](https://en.wikipedia.org/wiki/Gzip) methods as well.
 
 NO WARRANTIES, [MIT License](https://github.com/abapPM/ABAP-Tar/blob/main/LICENSE)
+
+Limitations: Block size is hardcoded to 512 bytes
 
 ## Usage
 
@@ -19,37 +21,24 @@ NO WARRANTIES, [MIT License](https://github.com/abapPM/ABAP-Tar/blob/main/LICENS
 Here's an example of how to tar a list of files.
 
 ```abap
-  DATA:
-    it_files    TYPE zcl_tar=>ty_files.
+DATA your_files TYPE zcl_tar=>ty_files.
 
-  DATA:
-    lv_packed   TYPE xstring,
-    lv_msg      TYPE string,
-    lo_tar_out  TYPE REF TO zcl_tar,
-    lx_error    TYPE REF TO zcx_error,
-    ls_file     TYPE zcl_tar=>ty_file.
-  
- TRY.
-      lo_tar_out = zcl_tar=>new( ).
+DATA(tar) = zcl_tar=>new( ).
 
-      LOOP AT it_files INTO ls_file.
-        lo_tar_out->append(
-          iv_name     = ls_file-name
-          iv_content  = ls_file-content
-          iv_date     = ls_file-date
-          iv_time     = ls_file-time
-          iv_mode     = ls_file-mode
-          iv_typeflag = ls_file-typeflag ).
-      ENDLOOP.
+LOOP AT files INTO ls_file.
+  tar->append(
+    name     = file-name
+    content  = file-content
+    date     = file-date
+    time     = file-time
+    mode     = file-mode
+    typeflag = file-typeflag ).
+ENDLOOP.
 
-      lv_data = lo_tar_out->save( ).
+DATA(tar_data) = tar->save( ).
 
-      lv_packed = lo_tar_out->gzip( lv_data ).
-
-    CATCH zcx_error INTO lx_error.
-      lv_msg = lx_error->get_text( ).
-      MESSAGE lv_msg TYPE 'I' DISPLAY LIKE 'E'.
-  ENDTRY.
+" Gzip
+DATA(packed_data) = tar->gzip( tar_data ).
 ```
 
 ### Untar Files
@@ -57,50 +46,44 @@ Here's an example of how to tar a list of files.
 Here's an example of how to untar a file.
 
 ```abap
-  DATA:
-    iv_filename TYPE string,
-    iv_data     TYPE xstring.
+DATA:
+  your_data     TYPE xstring,
+  unpacked_data TYPE xstring.
 
-  DATA:
-    lv_unpacked TYPE xstring,
-    lv_filedata TYPE xstring,
-    lv_msg      TYPE string,
-    lo_tar_in   TYPE REF TO zcl_tar,
-    lx_error    TYPE REF TO zcx_error,
-    ls_file     TYPE zcl_tar=>ty_file,
-    lt_files    TYPE zcl_tar=>ty_files.
-  
-  TRY.
-      lo_tar_in = zcl_tar=>new( ).
+DATA(tar) = zcl_tar=>new( ).
 
-      IF iv_filename CP '*.tgz' OR iv_filename CP '*.tar.gz'.
-        lv_unpacked = lo_tar_in->gunzip( iv_data ).
-      ELSE.
-        lv_unpacked = iv_data.
-      ENDIF.
+" Gunzip
+IF filename CP '*.tgz' OR filename CP '*.tar.gz'.
+  unpacked_data = tar->gunzip( your_data ).
+ELSE.
+  unpacked_data = your_data.
+ENDIF.
 
-      lo_tar_in->load( lv_unpacked ).
+tar->load( unpacked_data ).
+```
 
-      lt_files = lo_tar_in->list( ).
+List the files and get file content:
 
-      LOOP AT lt_files INTO ls_file.
-        lv_filedata = lo_tar_in->get( ls_file-name ).
-        " ...
-      ENDLOOP.
+```abap
+DATA(files) = tar->list( ).
 
-    CATCH zcx_error INTO lx_error.
-      lv_msg = lx_error->get_text( ).
-      MESSAGE lv_msg TYPE 'I' DISPLAY LIKE 'E'.
-  ENDTRY.
+LOOP AT files INTO DATA(file).
+  DATA(content)  = tar->get( file-name ).
+  " ...
+ENDLOOP.
 ```
 
 ## Prerequisites
 
-SAP Basis 7.02 or higher
+SAP Basis 7.50 or higher
 
 ## Installation
 
-Import ABAP Tar to your project using [apm](https://abappm.com).
+Install `tar` as a global module in your system using [apm](https://abappm.com).
+
+or
+
+Specify the `tar` module as a dependency in your project and import it to your namespace using [apm](https://abappm.com).
 
 ```abap
 IMPORT '*' TO 'z$1_your_project$2' FROM 'tar'.
@@ -122,4 +105,4 @@ Made with ❤️ in Canada
 
 Copyright 2024 apm.to Inc. <https://apm.to>
 
-Follow [@marcfbe](https://twitter.com/marcfbe) on X/Twitter or [marcfbe](https://linkedin.com/in/marcfbe) or LinkedIn
+Follow [@marcf.be](https://bsky.app/profile/marcf.be) on Blueksy

@@ -2,38 +2,42 @@
   "name": "tar",
   "version": "1.0.0",
   "description": "Tar for ABAP",
-  "author": {
-    "email": "marc@abappm.com",
-    "name": "Marc Bernard",
-    "url": "https://abappm.com"
-  },
-  "bugs": {
-    "url": "https://github.com/abapPM/ABAP-Tar"
-  },
-  "bundledDependencies": [
-    "error"
-  ],
-  "dependencies": {
-    "error": "^1.0.0"
-  },
-  "engines": {
-    "abap": ">=7.40",
-    "apm": ">=1"
-  },
-  "funding": {
-    "type": "github",
-    "url": "https://github.com/sponsors/abapPM"
-  },
-  "homepage": "https://abappm.com",
+  "type": "module",
   "keywords": [
     "abap",
     "apm",
     "module",
     "tar"
   ],
-  "license": "MIT",
-  "repository": {
-    "url": "git+https://github.com/abapPM/ABAP-Tar.git"
+  "homepage": "https://abappm.com",
+  "bugs": {
+    "url": "https://github.com/abapPM/ABAP-Tar"
   },
-  "type": "module"
+  "license": "MIT",
+  "author": {
+    "name": "Marc Bernard",
+    "url": "https://abappm.com",
+    "email": "marc@abappm.com"
+  },
+  "maintainers": [
+    {
+      "name": "Marc Bernard",
+      "url": "https://github.com/mbtools",
+      "email": "marc@abappm.com"
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/abapPM/ABAP-Tar"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/abapPM"
+  },
+  "dependencies": {
+    "error": "^1.0.0"
+  },
+  "engines": {
+    "abap": ">=7.50",
+    "apm": ">=1"
+  }
 }

@@ -297,12 +297,11 @@ CLASS zcl_tar DEFINITION
 
     CLASS-METHODS _checksum
       IMPORTING
-        VALUE(data)   TYPE any
+        !data         TYPE any
       RETURNING
         VALUE(result) TYPE i
       RAISING
         zcx_error.
-
 ENDCLASS.
 
 
@@ -413,7 +412,7 @@ CLASS zcl_tar IMPLEMENTATION.
   METHOD file_count.
 
     LOOP AT tar_files ASSIGNING FIELD-SYMBOL(<file>) WHERE typeflag = c_typeflag-file.
-      result += 1.
+      result = result + 1.
     ENDLOOP.
 
   ENDMETHOD.
@@ -594,9 +593,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
   METHOD new.
 
-    CREATE OBJECT result
-      EXPORTING
-        force_ustar = force_ustar.
+    result = NEW #( force_ustar ).
 
   ENDMETHOD.
 
@@ -658,8 +655,8 @@ CLASS zcl_tar IMPLEMENTATION.
       header-chksum = `        `. " 8 spaces
       header-chksum = _pad( number = _checksum( header ) length = 7 ) && null.
 
-      block = _to_xstring( header ).
-      result   = result && block.
+      block  = _to_xstring( header ).
+      result = result && block.
 
       " Data blocks
       READ TABLE tar_data ASSIGNING FIELD-SYMBOL(<item>) WITH TABLE KEY name = <file>-name.
@@ -677,7 +674,7 @@ CLASS zcl_tar IMPLEMENTATION.
         ELSE.
           block = <item>-content+offset(length).
         ENDIF.
-        result    = result && block.
+        result = result && block.
         offset = offset + c_blocksize.
         length = length - c_blocksize.
       ENDDO.
@@ -695,7 +692,7 @@ CLASS zcl_tar IMPLEMENTATION.
   METHOD unpacked_size.
 
     LOOP AT tar_files ASSIGNING FIELD-SYMBOL(<file>) WHERE typeflag = c_typeflag-file.
-      result += <file>-size.
+      result = result + <file>-size.
     ENDLOOP.
 
   ENDMETHOD.
@@ -724,7 +721,7 @@ CLASS zcl_tar IMPLEMENTATION.
     DO xstrlen( xstring ) TIMES.
       DATA(x) = xstring+i(1).
       result = result + x.
-      i += 1.
+      i = i + 1.
     ENDDO.
 
   ENDMETHOD.
@@ -765,7 +762,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
     DO strlen( octal ) TIMES.
       result = result * 8 + octal+offset(1).
-      offset += 1.
+      offset = offset + 1.
     ENDDO.
 
   ENDMETHOD.

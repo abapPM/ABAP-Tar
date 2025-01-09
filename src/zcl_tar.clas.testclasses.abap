@@ -362,10 +362,10 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
 
   METHOD _checksum.
 
-    CONSTANTS lc_data TYPE string VALUE 'abc 123'.
+    CONSTANTS c_data TYPE string VALUE 'abc 123'.
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_checksum( lc_data )
+      act = zcl_tar=>_checksum( c_data )
       exp = 476 ).
 
   ENDMETHOD.

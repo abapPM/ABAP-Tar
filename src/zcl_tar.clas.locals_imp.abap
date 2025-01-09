@@ -44,7 +44,7 @@ CLASS lcl_pax IMPLEMENTATION.
     LOOP AT pax_records ASSIGNING FIELD-SYMBOL(<record>).
       SPLIT <record> AT ` ` INTO DATA(octal_len) DATA(key_val).
       DATA(len) = zcl_tar=>_from_octal( octal_len ) - 1.
-      IF len <> strlen( key_val ).
+      IF strlen( key_val ) <> len.
         ASSERT 0 = 0. " ignore this inconsistency
       ENDIF.
 

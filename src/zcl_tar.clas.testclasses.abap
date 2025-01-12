@@ -269,14 +269,13 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
   METHOD _null.
 
     DATA:
-      null TYPE c LENGTH 1,
       BEGIN OF test_data,
         name TYPE c LENGTH 10,
         size TYPE c LENGTH 5,
         mode TYPE c LENGTH 8,
       END OF test_data.
 
-    null = zcl_tar=>null(1).
+    DATA(null) = zcl_tar=>null(1).
 
     test_data-name = 'test.txt'.
     test_data-size = '12345'.
@@ -315,9 +314,8 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
   METHOD _filename.
 
     DATA:
-      filename TYPE string,
-      prefix   TYPE zcl_tar=>ty_header-prefix,
-      name     TYPE zcl_tar=>ty_header-name.
+      prefix TYPE zcl_tar=>ty_header-prefix,
+      name   TYPE zcl_tar=>ty_header-name.
 
     cl_abap_unit_assert=>assert_equals(
       act = zcl_tar=>_to_filename( prefix = 'package/modules' name = 'tar.sh' )
@@ -340,8 +338,8 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
       exp = 'package/modules/tar.sh' ).
 
     " Long filename
-    filename = 'package/node_modules/node-gyp/node_modules/path-array/' &&
-      'node_modules/array-index/node_modules/es6-symbol/case-insensitive-compare.js'.
+    DATA(filename) = `package/node_modules/node-gyp/node_modules/path-array/` &
+      `node_modules/array-index/node_modules/es6-symbol/case-insensitive-compare.js`.
 
     zcl_tar=>_from_filename(
       EXPORTING

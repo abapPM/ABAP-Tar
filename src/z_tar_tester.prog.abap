@@ -1,11 +1,11 @@
-REPORT z_tar_tester.
-
 ************************************************************************
 * Tar Tester
 *
 * Copyright 2024 apm.to Inc. <https://apm.to>
 * SPDX-License-Identifier: MIT
 ************************************************************************
+
+REPORT z_tar_tester.
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
   PARAMETERS p_tar TYPE string LOWER CASE OBLIGATORY.
@@ -34,7 +34,7 @@ CLASS lcl_files DEFINITION.
 
     TYPES ty_hex TYPE x LENGTH 2048.
 
-    TYPES ty_data_table TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
+    TYPES ty_data_table TYPE STANDARD TABLE OF ty_hex WITH KEY table_line.
 
 ENDCLASS.
 
@@ -168,7 +168,6 @@ CLASS lcl_files IMPLEMENTATION.
         OTHERS                    = 24 ).
     IF sy-subrc <> 0.
       MESSAGE 'File save error' TYPE 'I' DISPLAY LIKE 'E'.
-      RETURN.
     ENDIF.
 
   ENDMETHOD.
@@ -186,7 +185,7 @@ START-OF-SELECTION.
     unpacked TYPE xstring,
     packed   TYPE xstring,
     msg      TYPE string,
-    files    TYPE zcl_tar=>ty_files,
+    files    TYPE zcl_tar=>ty_tar_files,
     file     TYPE zcl_tar=>ty_file.
 
   " Upload archive

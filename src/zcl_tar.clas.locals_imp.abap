@@ -130,9 +130,7 @@ CLASS lcl_7zip IMPLEMENTATION.
 
     CONSTANTS c_longlink TYPE string VALUE `././@LongLink`.
 
-    DATA header TYPE zcl_tar=>ty_header.
-
-    header = zcl_tar=>_from_xstring( block_1 ).
+    DATA(header) = CONV zcl_tar=>ty_header( zcl_tar=>_from_xstring( block_1 ) ).
 
     IF header-name = c_longlink.
       result = zcl_tar=>_from_xstring( block_2 ).

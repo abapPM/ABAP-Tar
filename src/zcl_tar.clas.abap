@@ -710,11 +710,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
   METHOD _from_filename.
 
-    DATA:
-      temp_name   TYPE string,
-      temp_prefix TYPE string.
-
-    temp_name = filename.
+    DATA(temp_name) = filename.
     DO.
       IF strlen( temp_name ) <= 100.
         name = temp_name.
@@ -722,7 +718,7 @@ CLASS zcl_tar IMPLEMENTATION.
       ENDIF.
 
       " Shorten name by moving part of path to prefix
-      SPLIT temp_name AT c_path_sep INTO temp_prefix temp_name.
+      SPLIT temp_name AT c_path_sep INTO DATA(temp_prefix) temp_name.
       IF sy-subrc <> 0.
         zcx_error=>raise( 'Error file name too long' ).
       ENDIF.

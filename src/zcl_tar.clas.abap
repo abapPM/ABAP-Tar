@@ -314,40 +314,34 @@ CLASS zcl_tar IMPLEMENTATION.
 
   METHOD append.
 
-    DATA:
-      file TYPE ty_file,
-      item TYPE ty_tar_item.
-
     " TODO: Support long filenames (pax)
     IF strlen( name ) > 100.
       zcx_error=>raise( |Filename longer than 100 characters: { name }| ).
     ENDIF.
 
     " List
-    file-name = name.
-    file-size = xstrlen( content ).
+    DATA(file) = VALUE ty_file(
+      name     = name
+      date     = date
+      time     = time
+      mode     = mode
+      typeflag = typeflag
+      keywords = keywords
+      size     = xstrlen( content ) ).
+
     IF date IS INITIAL.
       file-date = sy-datum.
-    ELSE.
-      file-date = date.
     ENDIF.
     IF time IS INITIAL.
       file-time = sy-uzeit.
-    ELSE.
-      file-time = time.
     ENDIF.
     IF mode IS INITIAL.
       file-mode = c_mode_default.
-    ELSE.
-      file-mode = mode.
     ENDIF.
     IF typeflag IS INITIAL.
       file-typeflag = c_typeflag-file.
-    ELSE.
-      file-typeflag = typeflag.
     ENDIF.
     file-unixtime = _to_unixtime( date = file-date time = file-time ).
-    file-keywords = keywords.
 
     INSERT file INTO TABLE tar_files.
     IF sy-subrc <> 0.
@@ -355,8 +349,9 @@ CLASS zcl_tar IMPLEMENTATION.
     ENDIF.
 
     " Data
-    item-name    = name.
-    item-content = content.
+    DATA(item) = VALUE ty_tar_item(
+      name    = name
+      content = content ).
     INSERT item INTO TABLE tar_data.
     IF sy-subrc <> 0.
       zcx_error=>raise( 'Error adding file (data)' ).

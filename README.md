@@ -92,12 +92,6 @@ or
 
 Specify the `tar` module as a dependency in your project and import it to your namespace using [apm](https://abappm.com).
 
-```abap
-IMPORT '*' TO 'z$1_your_project$2' FROM 'tar'.
-" or
-IMPORT '*' TO '/namespace/$1$2' FROM 'tar'.
-```
-
 ## Contributions
 
 All contributions are welcome! Read our [Contribution Guidelines](https://github.com/abapPM/ABAP-Tar/blob/main/CONTRIBUTING.md), fork this repo, and create a pull request.
@@ -110,6 +104,6 @@ Recommended SAP package: `$TAR`
 
 Made with ❤️ in Canada
 
-Copyright 2024 apm.to Inc. <https://apm.to>
+Copyright 2025 apm.to Inc. <https://apm.to>
 
 Follow [@marcf.be](https://bsky.app/profile/marcf.be) on Blueksy and [marcfbe](https://linkedin.com/in/marcfbe) or LinkedIn

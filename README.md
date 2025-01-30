@@ -6,7 +6,7 @@
 
 # Tar for ABAP
 
-This is an implementation of the [ustar](https://en.wikipedia.org/wiki/Tar_(computing)) and [pax](https://en.wikipedia.org/wiki/Pax_(command)) tar formats. 
+This is an implementation of the [ustar](https://en.wikipedia.org/wiki/Tar_(computing)) and [pax](https://en.wikipedia.org/wiki/Pax_(command)) tar formats.
 
 Archives can be compressed and decompressed using [gzip and gunzip](https://en.wikipedia.org/wiki/Gzip) methods as well.
 
@@ -96,14 +96,14 @@ Specify the `tar` module as a dependency in your project and import it to your n
 
 All contributions are welcome! Read our [Contribution Guidelines](https://github.com/abapPM/ABAP-Tar/blob/main/CONTRIBUTING.md), fork this repo, and create a pull request.
 
-You can install the developer version of ABAP Tar using [abapGit](https://github.com/abapGit/abapGit) either by creating a new online repository for `https://github.com/abapPM/ABAP-Tar`.
+You can install the developer version of ABAP Tar using [abapGit](https://github.com/abapGit/abapGit) by creating a new online repository for `https://github.com/abapPM/ABAP-Tar`.
 
 Recommended SAP package: `$TAR`
 
 ## About
 
-Made with ❤️ in Canada
+Made with ❤ in Canada
 
 Copyright 2025 apm.to Inc. <https://apm.to>
 
-Follow [@marcf.be](https://bsky.app/profile/marcf.be) on Blueksy and [marcfbe](https://linkedin.com/in/marcfbe) or LinkedIn
+Follow [@marcf.be](https://bsky.app/profile/marcf.be) on Blueksy and [@marcfbe](https://linkedin.com/in/marcfbe) or LinkedIn

@@ -5,28 +5,28 @@ CLASS ltcl_tar_tests DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
   PRIVATE SECTION.
 
     DATA:
-      cut          TYPE REF TO zcl_tar,
+      cut          TYPE REF TO /apmg/cl_tar,
       tar_data     TYPE xstring,
       tgz_data     TYPE xstring,
       index_js     TYPE xstring,
       package_json TYPE xstring,
-      tar_files    TYPE zcl_tar=>ty_tar_files.
+      tar_files    TYPE /apmg/cl_tar=>ty_tar_files.
 
     METHODS:
       setup,
-      tar FOR TESTING RAISING zcx_error,
-      untar FOR TESTING RAISING zcx_error,
-      gzip FOR TESTING RAISING zcx_error,
-      gunzip  FOR TESTING RAISING zcx_error.
+      tar FOR TESTING RAISING /apmg/cx_error,
+      untar FOR TESTING RAISING /apmg/cx_error,
+      gzip FOR TESTING RAISING /apmg/cx_error,
+      gunzip  FOR TESTING RAISING /apmg/cx_error.
 
 ENDCLASS.
 
-CLASS zcl_tar DEFINITION LOCAL FRIENDS ltcl_tar_tests.
+CLASS /apmg/cl_tar DEFINITION LOCAL FRIENDS ltcl_tar_tests.
 
 CLASS ltcl_tar_tests IMPLEMENTATION.
 
   METHOD setup.
-    cut = zcl_tar=>new( ).
+    cut = /apmg/cl_tar=>new( ).
 
     " Contains two files: index.js & package.json
     tar_data =
@@ -137,7 +137,7 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
     index_js      = cl_binary_convert=>string_to_xstring_ascii( index_js_txt ).
     package_json  = cl_binary_convert=>string_to_xstring_ascii( package_json_txt ).
 
-    tar_files = VALUE zcl_tar=>ty_tar_files(
+    tar_files = VALUE /apmg/cl_tar=>ty_tar_files(
       ( name = 'package/index.js' date = '19851026' time = '081500'
         mode = 420 unixtime = 499162500 size = 143 typeflag = '0' )
       ( name = 'package/package.json' date = '19851026' time = '081500'
@@ -147,7 +147,7 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
 
   METHOD tar.
 
-    DATA(tar_out) = zcl_tar=>new( ).
+    DATA(tar_out) = /apmg/cl_tar=>new( ).
 
     LOOP AT tar_files INTO DATA(file).
       CASE sy-tabix.
@@ -178,7 +178,7 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
 
   METHOD untar.
 
-    DATA(tar_in) = zcl_tar=>new( ).
+    DATA(tar_in) = /apmg/cl_tar=>new( ).
 
     tar_in->load( tar_data ).
 
@@ -196,7 +196,7 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
 
   METHOD gzip.
 
-    DATA(tar_out) = zcl_tar=>new( ).
+    DATA(tar_out) = /apmg/cl_tar=>new( ).
 
     LOOP AT tar_files INTO DATA(file).
       CASE sy-tabix.
@@ -229,7 +229,7 @@ CLASS ltcl_tar_tests IMPLEMENTATION.
 
   METHOD gunzip.
 
-    DATA(tar_in) = zcl_tar=>new( ).
+    DATA(tar_in) = /apmg/cl_tar=>new( ).
 
     DATA(tar_data) = tar_in->gunzip( tgz_data ).
 
@@ -253,16 +253,16 @@ CLASS ltcl_tar_helpers DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
   PRIVATE SECTION.
     METHODS:
       _null FOR TESTING,
-      _filename FOR TESTING RAISING zcx_error,
-      _checksum FOR TESTING RAISING zcx_error,
+      _filename FOR TESTING RAISING /apmg/cx_error,
+      _checksum FOR TESTING RAISING /apmg/cx_error,
       _octal FOR TESTING,
       _pad FOR TESTING,
-      _unixtime FOR TESTING RAISING zcx_error,
-      _xstring FOR TESTING RAISING zcx_error.
+      _unixtime FOR TESTING RAISING /apmg/cx_error,
+      _xstring FOR TESTING RAISING /apmg/cx_error.
 
 ENDCLASS.
 
-CLASS zcl_tar DEFINITION LOCAL FRIENDS ltcl_tar_helpers.
+CLASS /apmg/cl_tar DEFINITION LOCAL FRIENDS ltcl_tar_helpers.
 
 CLASS ltcl_tar_helpers IMPLEMENTATION.
 
@@ -275,13 +275,13 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
         mode TYPE c LENGTH 8,
       END OF test_data.
 
-    DATA(null) = zcl_tar=>null(1).
+    DATA(null) = /apmg/cl_tar=>null(1).
 
     test_data-name = 'test.txt'.
     test_data-size = '12345'.
     test_data-mode = '01234'.
 
-    zcl_tar=>_append_nulls( CHANGING data = test_data ).
+    /apmg/cl_tar=>_append_nulls( CHANGING data = test_data ).
 
     cl_abap_unit_assert=>assert_equals(
       act = test_data-name
@@ -295,7 +295,7 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
       act = test_data-mode
       exp = '01234' && null && null && null ).
 
-    zcl_tar=>_remove_nulls( CHANGING data = test_data ).
+    /apmg/cl_tar=>_remove_nulls( CHANGING data = test_data ).
 
     cl_abap_unit_assert=>assert_equals(
       act = test_data-name
@@ -314,15 +314,15 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
   METHOD _filename.
 
     DATA:
-      prefix TYPE zcl_tar=>ty_header-prefix,
-      name   TYPE zcl_tar=>ty_header-name.
+      prefix TYPE /apmg/cl_tar=>ty_header-prefix,
+      name   TYPE /apmg/cl_tar=>ty_header-name.
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_to_filename( prefix = 'package/modules' name = 'tar.sh' )
+      act = /apmg/cl_tar=>_to_filename( prefix = 'package/modules' name = 'tar.sh' )
       exp = 'package/modules/tar.sh' ).
 
     " Short filename
-    zcl_tar=>_from_filename(
+    /apmg/cl_tar=>_from_filename(
       EXPORTING
         filename = 'package/modules/tar.sh'
       IMPORTING
@@ -341,7 +341,7 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
     DATA(filename) = `package/node_modules/node-gyp/node_modules/path-array/` &
       `node_modules/array-index/node_modules/es6-symbol/case-insensitive-compare.js`.
 
-    zcl_tar=>_from_filename(
+    /apmg/cl_tar=>_from_filename(
       EXPORTING
         filename = filename
       IMPORTING
@@ -363,7 +363,7 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
     CONSTANTS c_data TYPE string VALUE 'abc 123'.
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_checksum( c_data )
+      act = /apmg/cl_tar=>_checksum( c_data )
       exp = 476 ).
 
   ENDMETHOD.
@@ -371,35 +371,35 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
   METHOD _octal.
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_to_octal( 0 )
+      act = /apmg/cl_tar=>_to_octal( 0 )
       exp = '0' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_to_octal( 143 )
+      act = /apmg/cl_tar=>_to_octal( 143 )
       exp = '217' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_to_octal( 4565 )
+      act = /apmg/cl_tar=>_to_octal( 4565 )
       exp = '10725' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_to_octal( 498112 )
+      act = /apmg/cl_tar=>_to_octal( 498112 )
       exp = '1714700' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_from_octal( '0' )
+      act = /apmg/cl_tar=>_from_octal( '0' )
       exp = 0 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_from_octal( '217' )
+      act = /apmg/cl_tar=>_from_octal( '217' )
       exp = 143 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_from_octal( '10725' )
+      act = /apmg/cl_tar=>_from_octal( '10725' )
       exp = 4565 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_from_octal( '1714700' )
+      act = /apmg/cl_tar=>_from_octal( '1714700' )
       exp = 498112 ).
 
   ENDMETHOD.
@@ -407,35 +407,35 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
   METHOD _pad.
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_pad( number = 0 length = 4 )
+      act = /apmg/cl_tar=>_pad( number = 0 length = 4 )
       exp = '0000' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_pad( number = 143 length = 8 )
+      act = /apmg/cl_tar=>_pad( number = 143 length = 8 )
       exp = '00000217' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_pad( number = 4565 length = 8 )
+      act = /apmg/cl_tar=>_pad( number = 4565 length = 8 )
       exp = '00010725' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_pad( number = 498112 length = 12 )
+      act = /apmg/cl_tar=>_pad( number = 498112 length = 12 )
       exp = '000001714700' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_unpad( '0000' )
+      act = /apmg/cl_tar=>_unpad( '0000' )
       exp = 0 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_unpad( '00000217' )
+      act = /apmg/cl_tar=>_unpad( '00000217' )
       exp = 143 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_unpad( '00010725' )
+      act = /apmg/cl_tar=>_unpad( '00010725' )
       exp = 4565 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_unpad( '000001714700' )
+      act = /apmg/cl_tar=>_unpad( '000001714700' )
       exp = 498112 ).
 
   ENDMETHOD.
@@ -447,10 +447,10 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
       time TYPE t.
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_to_unixtime( date = '20221126' time = '123456' )
+      act = /apmg/cl_tar=>_to_unixtime( date = '20221126' time = '123456' )
       exp = 1669466096 ).
 
-    zcl_tar=>_from_unixtime(
+    /apmg/cl_tar=>_from_unixtime(
       EXPORTING
         unixtime = 1669466096
       IMPORTING
@@ -470,11 +470,11 @@ CLASS ltcl_tar_helpers IMPLEMENTATION.
   METHOD _xstring.
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_to_xstring( 'abc 123 -' )
+      act = /apmg/cl_tar=>_to_xstring( 'abc 123 -' )
       exp = '61626320313233202D' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = zcl_tar=>_from_xstring( '61626320313233202D' )
+      act = /apmg/cl_tar=>_from_xstring( '61626320313233202D' )
       exp = 'abc 123 -' ).
 
   ENDMETHOD.

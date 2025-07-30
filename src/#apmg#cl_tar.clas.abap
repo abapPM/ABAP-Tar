@@ -1,4 +1,4 @@
-CLASS zcl_tar DEFINITION
+CLASS /apmg/cl_tar DEFINITION
   PUBLIC
   CREATE PRIVATE.
 
@@ -24,7 +24,6 @@ CLASS zcl_tar DEFINITION
 * Performance note: Do not use && to concatenate xstring since it
 * converts to string implicitly. Use CONCATENATE ... IN BYTE MODE.
 ************************************************************************
-
   PUBLIC SECTION.
 
     CONSTANTS c_version TYPE string VALUE '2.0.1' ##NEEDED.
@@ -95,7 +94,7 @@ CLASS zcl_tar DEFINITION
       IMPORTING
         !force_ustar  TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(result) TYPE REF TO zcl_tar.
+        VALUE(result) TYPE REF TO /apmg/cl_tar.
 
     METHODS constructor
       IMPORTING
@@ -106,16 +105,16 @@ CLASS zcl_tar DEFINITION
       IMPORTING
         !tar          TYPE xstring
       RETURNING
-        VALUE(result) TYPE REF TO zcl_tar
+        VALUE(result) TYPE REF TO /apmg/cl_tar
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     "! Create archive
     METHODS save
       RETURNING
         VALUE(result) TYPE xstring
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     "! Read file from archive
     METHODS get
@@ -124,28 +123,28 @@ CLASS zcl_tar DEFINITION
       RETURNING
         VALUE(result) TYPE xstring
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     "! List the table of contents of an archive (no data)
     METHODS list
       RETURNING
         VALUE(result) TYPE ty_tar_files
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     "! Number of files in archive
     METHODS file_count
       RETURNING
         VALUE(result) TYPE i
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     "! Total size of unpackage files in bytes
     METHODS unpacked_size
       RETURNING
         VALUE(result) TYPE i
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     "! Append file to archive
     METHODS append
@@ -158,18 +157,18 @@ CLASS zcl_tar DEFINITION
         !typeflag     TYPE c OPTIONAL
         !keywords     TYPE ty_keywords OPTIONAL " pax
       RETURNING
-        VALUE(result) TYPE REF TO zcl_tar
+        VALUE(result) TYPE REF TO /apmg/cl_tar
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     "! Delete file from archive
     METHODS delete
       IMPORTING
         !name         TYPE csequence
       RETURNING
-        VALUE(result) TYPE REF TO zcl_tar
+        VALUE(result) TYPE REF TO /apmg/cl_tar
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     "! Gzip archive
     METHODS gzip
@@ -178,7 +177,7 @@ CLASS zcl_tar DEFINITION
       RETURNING
         VALUE(result) TYPE xstring
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     "! Gunzip archive
     METHODS gunzip
@@ -187,7 +186,7 @@ CLASS zcl_tar DEFINITION
       RETURNING
         VALUE(result) TYPE xstring
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -254,7 +253,7 @@ CLASS zcl_tar DEFINITION
       RETURNING
         VALUE(result) TYPE string
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     CLASS-METHODS _to_xstring
       IMPORTING
@@ -262,7 +261,7 @@ CLASS zcl_tar DEFINITION
       RETURNING
         VALUE(result) TYPE xstring
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     CLASS-METHODS _from_filename
       IMPORTING
@@ -271,7 +270,7 @@ CLASS zcl_tar DEFINITION
         !prefix   TYPE ty_header-prefix
         !name     TYPE ty_header-name
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     CLASS-METHODS _to_filename
       IMPORTING
@@ -287,7 +286,7 @@ CLASS zcl_tar DEFINITION
         !date     TYPE d
         !time     TYPE t
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     CLASS-METHODS _to_unixtime
       IMPORTING
@@ -296,7 +295,7 @@ CLASS zcl_tar DEFINITION
       RETURNING
         VALUE(result) TYPE i
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     CLASS-METHODS _checksum
       IMPORTING
@@ -304,20 +303,20 @@ CLASS zcl_tar DEFINITION
       RETURNING
         VALUE(result) TYPE i
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
 ENDCLASS.
 
 
 
-CLASS zcl_tar IMPLEMENTATION.
+CLASS /apmg/cl_tar IMPLEMENTATION.
 
 
   METHOD append.
 
     " TODO: Support long filenames (pax)
     IF strlen( name ) > 100.
-      RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = |Filename longer than 100 characters: { name }|.
+      RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = |Filename longer than 100 characters: { name }|.
     ENDIF.
 
     " List
@@ -346,7 +345,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
     INSERT file INTO TABLE tar_files.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error adding file (list)'.
+      RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error adding file (list)'.
     ENDIF.
 
     " Data
@@ -355,7 +354,7 @@ CLASS zcl_tar IMPLEMENTATION.
       content = content ).
     INSERT item INTO TABLE tar_data.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error adding file (data)'.
+      RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error adding file (data)'.
     ENDIF.
 
     result = me.
@@ -391,12 +390,12 @@ CLASS zcl_tar IMPLEMENTATION.
 
     DELETE tar_files WHERE name = CONV string( name ).
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error deleting file (list)'.
+      RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error deleting file (list)'.
     ENDIF.
 
     DELETE tar_data WHERE name = CONV string( name ).
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error deleting file (data)'.
+      RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error deleting file (data)'.
     ENDIF.
 
     result = me.
@@ -419,7 +418,7 @@ CLASS zcl_tar IMPLEMENTATION.
     IF sy-subrc = 0.
       result = <item>-content.
     ELSE.
-      RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error getting file'.
+      RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error getting file'.
     ENDIF.
 
   ENDMETHOD.
@@ -459,7 +458,7 @@ CLASS zcl_tar IMPLEMENTATION.
     DATA(size) = xstrlen( tar ).
 
     IF size = 0 OR size MOD c_blocksize <> 0.
-      RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error loading file (blocksize)'.
+      RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error loading file (blocksize)'.
     ENDIF.
 
     CLEAR tar_files.
@@ -502,9 +501,9 @@ CLASS zcl_tar IMPLEMENTATION.
 
       IF force_ustar = abap_true.
         IF header-magic <> c_ustar_magic.
-          RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error loading file (ustar)'.
+          RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error loading file (ustar)'.
         ELSEIF header-version <> c_ustar_version AND header-version <> ` `.
-          RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error loading file (version)'.
+          RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error loading file (version)'.
         ENDIF.
       ENDIF.
 
@@ -587,9 +586,9 @@ CLASS zcl_tar IMPLEMENTATION.
       WHERE typeflag = c_typeflag-file OR typeflag = c_typeflag-directory.
 
       IF strlen( <file>-name ) > 255.
-        RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error saving file (name)'.
+        RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error saving file (name)'.
       ELSEIF <file>-name CA '\'.
-        RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error saving file (path)'.
+        RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error saving file (path)'.
       ENDIF.
 
       " Add extended header block for pax keywords
@@ -635,7 +634,7 @@ CLASS zcl_tar IMPLEMENTATION.
       " Data blocks
       READ TABLE tar_data ASSIGNING FIELD-SYMBOL(<item>) WITH TABLE KEY name = <file>-name.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error saving file (data)'.
+        RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error saving file (data)'.
       ENDIF.
 
       DATA(offset) = 0.
@@ -714,7 +713,7 @@ CLASS zcl_tar IMPLEMENTATION.
       " Shorten name by moving part of path to prefix
       SPLIT temp_name AT c_path_sep INTO DATA(temp_prefix) temp_name.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error file name too long'.
+        RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error file name too long'.
       ENDIF.
 
       IF prefix IS INITIAL.
@@ -741,7 +740,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
       CATCH cx_parameter_invalid_range
             cx_parameter_invalid_type.
-        RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error converting from UNIX time'.
+        RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error converting from UNIX time'.
     ENDTRY.
 
     CONVERT TIME STAMP timestamp TIME ZONE 'UTC' INTO DATE date TIME time.
@@ -806,7 +805,7 @@ CLASS zcl_tar IMPLEMENTATION.
 
       CATCH cx_parameter_invalid_range
             cx_parameter_invalid_type.
-        RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error converting to UNIX time'.
+        RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error converting to UNIX time'.
     ENDTRY.
 
   ENDMETHOD.

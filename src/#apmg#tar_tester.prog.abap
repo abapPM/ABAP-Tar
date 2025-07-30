@@ -5,7 +5,7 @@
 * SPDX-License-Identifier: MIT
 ************************************************************************
 
-REPORT z_tar_tester.
+REPORT /apmg/tar_tester.
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
   PARAMETERS p_tar TYPE string LOWER CASE OBLIGATORY.
@@ -185,15 +185,15 @@ START-OF-SELECTION.
     unpacked TYPE xstring,
     packed   TYPE xstring,
     msg      TYPE string,
-    files    TYPE zcl_tar=>ty_tar_files,
-    file     TYPE zcl_tar=>ty_file.
+    files    TYPE /apmg/cl_tar=>ty_tar_files,
+    file     TYPE /apmg/cl_tar=>ty_file.
 
   " Upload archive
   data = lcl_files=>upload( p_tar ).
 
   " Load Test
   TRY.
-      DATA(tar_in) = zcl_tar=>new( ).
+      DATA(tar_in) = /apmg/cl_tar=>new( ).
 
       " Gunzip
       IF p_tar CP '*.tgz' OR p_tar CP '*.tar.gz'.
@@ -206,7 +206,7 @@ START-OF-SELECTION.
 
       files = tar_in->list( ).
 
-    CATCH zcx_error INTO DATA(error).
+    CATCH /apmg/cx_error INTO DATA(error).
       msg = error->get_text( ).
       MESSAGE msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.
@@ -214,7 +214,7 @@ START-OF-SELECTION.
 
   " Save Test
   TRY.
-      DATA(tar_out) = zcl_tar=>new( ).
+      DATA(tar_out) = /apmg/cl_tar=>new( ).
 
       LOOP AT files INTO file.
         tar_out->append(
@@ -231,7 +231,7 @@ START-OF-SELECTION.
       " Gzip
       packed = tar_out->gzip( data ).
 
-    CATCH zcx_error INTO error.
+    CATCH /apmg/cx_error INTO error.
       msg = error->get_text( ).
       MESSAGE msg TYPE 'I' DISPLAY LIKE 'E'.
       RETURN.

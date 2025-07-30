@@ -20,7 +20,7 @@ CLASS lcl_tar_helpers DEFINITION.
       RETURNING
         VALUE(result) TYPE string
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
     CLASS-METHODS to_xstring
       IMPORTING
@@ -28,7 +28,7 @@ CLASS lcl_tar_helpers DEFINITION.
       RETURNING
         VALUE(result) TYPE xstring
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
   PRIVATE SECTION.
 
@@ -83,7 +83,7 @@ CLASS lcl_tar_helpers IMPLEMENTATION.
       CATCH cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
             cx_parameter_invalid_type.
-        RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error converting from xstring'.
+        RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error converting from xstring'.
     ENDTRY.
 
   ENDMETHOD.
@@ -106,7 +106,7 @@ CLASS lcl_tar_helpers IMPLEMENTATION.
       CATCH cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
             cx_parameter_invalid_type.
-        RAISE EXCEPTION TYPE zcx_error_text EXPORTING text = 'Error converting to xstring'.
+        RAISE EXCEPTION TYPE /apmg/cx_error_text EXPORTING text = 'Error converting to xstring'.
     ENDTRY.
 
   ENDMETHOD.
@@ -127,20 +127,20 @@ CLASS lcl_pax DEFINITION.
       IMPORTING
         block         TYPE xstring
       RETURNING
-        VALUE(result) TYPE zcl_tar=>ty_keywords.
+        VALUE(result) TYPE /apmg/cl_tar=>ty_keywords.
 
     CLASS-METHODS encode_keywords
       IMPORTING
-        keywords      TYPE zcl_tar=>ty_keywords
+        keywords      TYPE /apmg/cl_tar=>ty_keywords
       RETURNING
         VALUE(result) TYPE xstring.
 
     CLASS-METHODS merge_keywords
       IMPORTING
-        global        TYPE zcl_tar=>ty_keywords
-        extended      TYPE zcl_tar=>ty_keywords
+        global        TYPE /apmg/cl_tar=>ty_keywords
+        extended      TYPE /apmg/cl_tar=>ty_keywords
       RETURNING
-        VALUE(result) TYPE zcl_tar=>ty_keywords.
+        VALUE(result) TYPE /apmg/cl_tar=>ty_keywords.
 
 ENDCLASS.
 
@@ -162,7 +162,7 @@ CLASS lcl_pax IMPLEMENTATION.
       ENDIF.
 
       SPLIT key_val AT `=` INTO DATA(key) DATA(value).
-      DATA(keyword) = VALUE zcl_tar=>ty_keyword(
+      DATA(keyword) = VALUE /apmg/cl_tar=>ty_keyword(
         keyword = key
         value   = value ).
       INSERT keyword INTO TABLE result.
@@ -173,7 +173,7 @@ CLASS lcl_pax IMPLEMENTATION.
   METHOD encode_keywords.
 
     DATA pax_records TYPE string_table.
-    DATA block TYPE x LENGTH zcl_tar=>c_blocksize.
+    DATA block TYPE x LENGTH /apmg/cl_tar=>c_blocksize.
 
     LOOP AT keywords ASSIGNING FIELD-SYMBOL(<keyword>).
       DATA(pax_record) = |{ <keyword>-keyword }={ <keyword>-value }|.
@@ -191,7 +191,7 @@ CLASS lcl_pax IMPLEMENTATION.
 
     result = cl_binary_convert=>string_to_xstring_utf8( pax_data ).
 
-    len = zcl_tar=>c_blocksize - xstrlen( result ).
+    len = /apmg/cl_tar=>c_blocksize - xstrlen( result ).
 
     IF len < 0.
       " TODO: What if the keywords don't fit into a blocK?
@@ -231,7 +231,7 @@ CLASS lcl_7zip DEFINITION.
       RETURNING
         VALUE(result) TYPE string
       RAISING
-        zcx_error.
+        /apmg/cx_error.
 
 ENDCLASS.
 
@@ -241,7 +241,7 @@ CLASS lcl_7zip IMPLEMENTATION.
 
     CONSTANTS c_longlink TYPE string VALUE `././@LongLink`.
 
-    DATA(header) = CONV zcl_tar=>ty_header( lcl_tar_helpers=>from_xstring( block_1 ) ).
+    DATA(header) = CONV /apmg/cl_tar=>ty_header( lcl_tar_helpers=>from_xstring( block_1 ) ).
 
     IF header-name = c_longlink.
       result = lcl_tar_helpers=>from_xstring( block_2 ).

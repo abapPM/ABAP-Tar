@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/endpoint?url=https://shield.abappm.com/github/abapPM/ABAP-Tar/src/zcl_tar.clas.abap/c_version&label=Version&color=blue)
+![Version](https://img.shields.io/endpoint?url=https://shield.abappm.com/github/abapPM/ABAP-Tar/src/%2523apmg%2523cl_tar.clas.abap/c_version&label=Version&color=blue)
 
 [![License](https://img.shields.io/github/license/abapPM/ABAP-Tar?label=License&&color=success)](https://github.com/abapPM/ABAP-Tar/blob/main/LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg?&color=success)](https://github.com/abapPM/.github/blob/main/CODE_OF_CONDUCT.md)
@@ -21,9 +21,9 @@ Limitations: Block size is hardcoded to 512 bytes
 Here's an example of how to tar a list of files.
 
 ```abap
-DATA your_files TYPE zcl_tar=>ty_files.
+DATA your_files TYPE /apmg/cl_tar=>ty_files.
 
-DATA(tar) = zcl_tar=>new( ).
+DATA(tar) = /apmg/cl_tar=>new( ).
 
 LOOP AT files INTO ls_file.
   tar->append(
@@ -50,7 +50,7 @@ DATA:
   your_data     TYPE xstring,
   unpacked_data TYPE xstring.
 
-DATA(tar) = zcl_tar=>new( ).
+DATA(tar) = /apmg/cl_tar=>new( ).
 
 " Gunzip
 IF filename CP '*.tgz' OR filename CP '*.tar.gz'.
@@ -62,7 +62,7 @@ ENDIF.
 tar->load( unpacked_data ).
 ```
 
-List the files and get file content:
+List the files and get the file content:
 
 ```abap
 DATA(files) = tar->list( ).
@@ -73,7 +73,7 @@ LOOP AT files INTO DATA(file).
 ENDLOOP.
 ```
 
-You can use program `Z_TAR_TESTER` to test the methods:
+You can use the program `/APMG/TAR_TESTER` to test the methods:
 
 - upload a tar file
 - untar it
@@ -98,7 +98,7 @@ All contributions are welcome! Read our [Contribution Guidelines](https://github
 
 You can install the developer version of ABAP Tar using [abapGit](https://github.com/abapGit/abapGit) by creating a new online repository for `https://github.com/abapPM/ABAP-Tar`.
 
-Recommended SAP package: `$TAR`
+Recommended SAP package: `/APMG/TAR`
 
 ## About
 
@@ -106,4 +106,4 @@ Made with ❤ in Canada
 
 Copyright 2025 apm.to Inc. <https://apm.to>
 
-Follow [@marcf.be](https://bsky.app/profile/marcf.be) on Blueksy and [@marcfbe](https://linkedin.com/in/marcfbe) or LinkedIn
+Follow [@marcf.be](https://bsky.app/profile/marcf.be) on Bluesky and [@marcfbe](https://linkedin.com/in/marcfbe) or LinkedIn

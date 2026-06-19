@@ -16,12 +16,14 @@
   "license": "MIT",
   "author": {
     "name": "Marc Bernard",
-    "url": "https://abappm.com"
+    "url": "https://abappm.com",
+    "email": "marc@mail.abappm.com"
   },
   "maintainers": [
     {
       "name": "Marc Bernard",
-      "url": "https://github.com/mbtools"
+      "url": "https://github.com/mbtools",
+      "email": "mbtools@mail.abappm.com"
     }
   ],
   "repository": {

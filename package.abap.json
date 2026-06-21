@@ -39,5 +39,10 @@
   "engines": {
     "abap": ">=7.50",
     "apm": ">=1"
+  },
+  "sapPackage": {
+    "default": "/APMG/TAR",
+    "applicationComponent": "BC",
+    "abapLanguageVersion": "standard"
   }
 }

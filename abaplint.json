@@ -9,7 +9,7 @@
 		  "files": "/src/**/*.*",
 		  "folder": "/deps2",
 		  "url": "https://github.com/abapPM/ABAP-Exceptions"
-	  },
+	  }
 	],
 	"global": {
 	  "exclude": [],
